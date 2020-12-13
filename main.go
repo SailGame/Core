@@ -9,14 +9,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-func logInit() {
+func init() {
 	log.SetPrefix("TRACE: ")
 	log.SetFlags(log.Ldate | log.Lmicroseconds | log.Llongfile)
 }
 
 func main() {
-	logInit()
-
 	// TODO: cmd args
 	lis, err := net.Listen("tcp", "0.0.0.0" + ":" + "8080")
 	if err != nil {
