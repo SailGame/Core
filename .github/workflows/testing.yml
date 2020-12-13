@@ -24,12 +24,13 @@ jobs:
       with:
         go-version: 1.13
     - name: install dependencies
-      run:
+      run: |
         sudo apt install -y make protobuf-compiler
+        go mod download
+        make proto
     - name: build
       run: |
         make clean
-        make proto
         make
     - name: test
       run: go test -cpu 1,4 -timeout 7m github.com/SailGame/Core/...
