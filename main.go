@@ -4,7 +4,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/SailGame/Core/handler"
+	"github.com/SailGame/Core/server"
 	cpb "github.com/SailGame/Core/pb/core"
 	"google.golang.org/grpc"
 )
@@ -24,11 +24,11 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	handler, err := handler.NewCoreServerHandler(&handler.CoreServerHandlerConfig{})
+	coreServer, err := server.NewCoreServer(&server.CoreServerConfig{})
 	if err != nil {
 		panic(err)
 	}
-	cpb.RegisterGameCoreServer(s, handler)
+	cpb.RegisterGameCoreServer(s, coreServer)
 	log.Println("rpc server start")
 	s.Serve(lis)
 }
