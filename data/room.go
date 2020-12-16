@@ -8,11 +8,11 @@ const (
 )
 
 type Room interface {
-	GetGameName() (string, error)
+	GetGameName() (string)
 	SetGameName(string)
-	GetUsers() ([]User, error)
+	GetUsers() ([]User)
 	SetProvider(interface{})
-	GetProvider() (interface{}, error)
+	GetProvider() (interface{})
 	GetState() (RoomState)
 
 	UserJoin(User) (error)
