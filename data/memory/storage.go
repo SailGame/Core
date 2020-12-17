@@ -5,6 +5,7 @@ import (
 	"log"
 
 	d "github.com/SailGame/Core/data"
+	"github.com/go-basic/uuid"
 )
 
 type Storage struct {
@@ -39,43 +40,63 @@ func (s Storage) FindRoom(roomID int) (d.Room, error){
 	}
 }
 
-// func (s *Storage) DelRoom(roomID int) (error){
-
-// }
-
-// func (s *Storage) CreateUser(userName string, passwd string) (error){
-
-// }
-// func (s *Storage) FindUser(userName string, passwd string) (d.User, error){
-
-// }
-// func (s *Storage) DelUser(userName string) (error){
-
-// }
-
-// func (s *Storage) CreateToken(userID int) (error){
-
-// }
-// func (s *Storage) FindToken(token string) (d.Token, error){
-
-// }
-// func (s *Storage) DelToken(token string) (error){
-
-// }
-// func (s *Storage) RegisterProvider(providerID string, provider interface{}) (error){
-
-// }
-// func (s *Storage) FindProvider(providerID string) (interface{}, error){
-
-// }
-// func (s *Storage) UnRegisterProvider(providerID string) (error){
-
-// }
-
-type User struct {
-
+func (s Storage) DelRoom(roomID int) (error){
+	_, ok := s.mRooms[roomID]
+	if(!ok){
+		return errors.New("No such room")
+	}
+	delete(s.mRooms, roomID)
+	return nil
 }
 
-type Token struct {
-
+func (s Storage) CreateUser(userName string, passwd string) (error){
+	_, ok := s.mUsers[userName]
+	if(ok){
+		return errors.New("UserName is occupied:" + userName)
+	}
+	s.mUsers[userName] = NewUser(userName, passwd)
+	return nil
 }
+
+func (s Storage) FindUser(userName string, passwd string) (d.User, error){
+	user, ok := s.mUsers[userName]
+	if(ok){
+		return nil, errors.New("No such user:" + userName)
+	}
+	return user, nil
+}
+
+func (s Storage) DelUser(userName string) (error){
+	// TODO: is user playing?
+	delete(s.mUsers, userName)
+	return nil
+}
+
+func (s Storage) CreateToken(user User) (error){
+	// TODO: clear old token?
+	uuid := uuid.New()
+	s.mTokens[uuid] = Token{mKey: uuid, mUser: user}
+	return nil
+}
+func (s Storage) FindToken(key string) (d.Token, error){
+	token, ok := s.mTokens[key]
+	if(ok){
+		return token, nil
+	}else{
+		return nil, errors.New("No such token:" + key)
+	}
+}
+func (s Storage) DelToken(key string) (error){
+	delete(s.mTokens, key)
+	return nil
+}
+
+// func (s Storage) RegisterProvider(providerID string, provider interface{}) (error){
+
+// }
+// func (s Storage) FindProvider(providerID string) (interface{}, error){
+
+// }
+// func (s Storage) UnRegisterProvider(providerID string) (error){
+
+// }

@@ -11,9 +11,9 @@ type Storage interface {
 	FindUser(userName string, passwd string) (User, error)
 	DelUser(userName string) (error)
 
-	CreateToken(userID int32) (error)
-	FindToken(token string) (Token, error)
-	DelToken(token string) (error)
+	CreateToken(user User) (error)
+	FindToken(key string) (Token, error)
+	DelToken(key string) (error)
 
 	RegisterProvider(providerID string, provider interface{}) (error)
 	FindProvider(providerID string) (interface{}, error)
