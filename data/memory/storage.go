@@ -26,9 +26,18 @@ func NewStorage() (Storage){
 
 func (s Storage) CreateRoom() (d.Room, error){
 	// TODO: if the room is released, the length is not a stable id
-	newRoom := NewRoom()
-	s.mRooms[int32(len(s.mRooms))] = newRoom
+	roomID := int32(len(s.mRooms));
+	newRoom := NewRoom(roomID)
+	s.mRooms[roomID] = newRoom
 	return newRoom, nil
+}
+
+func (s Storage) GetRooms() ([]d.Room){
+	ret := make([]d.Room, len(s.mRooms))
+	for _, v := range s.mRooms {
+		ret = append(ret, v)
+	}
+	return ret
 }
 
 func (s Storage) FindRoom(roomID int32) (d.Room, error){
@@ -59,6 +68,14 @@ func (s Storage) CreateUser(userName string, passwd string) (error){
 	return nil
 }
 
+func (s Storage) GetUsers() ([]d.User){
+	ret := make([]d.User, len(s.mUsers))
+	for _, v := range s.mUsers {
+		ret = append(ret, v)
+	}
+	return ret
+}
+
 func (s Storage) FindUser(userName string, passwd string) (d.User, error){
 	user, ok := s.mUsers[userName]
 	if(ok){
@@ -73,11 +90,12 @@ func (s Storage) DelUser(userName string) (error){
 	return nil
 }
 
-func (s Storage) CreateToken(user d.User) (error){
+func (s Storage) CreateToken(user d.User) (Token, error){
 	// TODO: clear old token?
 	uuid := uuid.New()
-	s.mTokens[uuid] = Token{mKey: uuid, mUser: user}
-	return nil
+	newToken := Token{mKey: uuid, mUser: user}
+	s.mTokens[uuid] = newToken
+	return newToken, nil
 }
 
 func (s Storage) FindToken(key string) (d.Token, error){
@@ -97,6 +115,14 @@ func (s Storage) DelToken(key string) (error){
 func (s Storage) RegisterProvider(providerID string, provider d.Provider) (error){
 	s.mProviders[providerID] = provider
 	return nil
+}
+
+func (s Storage) GetProviders() ([]d.Provider){
+	ret := make([]d.Provider, len(s.mProviders))
+	for _, v := range s.mProviders {
+		ret = append(ret, v)
+	}
+	return ret
 }
 
 func (s Storage) FindProvider(providerID string) (d.Provider, error){

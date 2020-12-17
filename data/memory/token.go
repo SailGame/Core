@@ -5,14 +5,17 @@ import (
 )
 
 type Token struct {
-	mKey string
+	mKey  string
 	mUser d.User
 }
 
-func (t Token) GetToken() (string){
+func (t Token) GetKey() string {
 	return t.mKey
 }
 
-func (t Token) GetUserName() (string){
+func (t Token) GetUser() d.User {
+	return t.mUser
+}
+func (t Token) GetUserName() string {
 	return t.mUser.GetUserName()
 }

@@ -8,6 +8,7 @@ const (
 )
 
 type Room interface {
+	GetRoomID() (int32)
 	GetGameName() (string)
 	SetGameName(string)
 	GetUsers() ([]User)

@@ -1,6 +1,7 @@
 package data
 
 type Token interface {
-	GetToken() (string)
-	GetUserName() (string)
+	GetKey() string
+	GetUser() User
+	GetUserName() string
 }
