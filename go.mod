@@ -3,6 +3,7 @@ module github.com/SailGame/Core
 go 1.13
 
 require (
+	github.com/go-basic/uuid v1.0.0
 	github.com/golang/protobuf v1.4.3
 	google.golang.org/grpc v1.34.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.0.1 // indirect

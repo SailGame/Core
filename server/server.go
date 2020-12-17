@@ -2,6 +2,7 @@ package server
 
 import (
 	cpb "github.com/SailGame/Core/pb/core"
+	d "github.com/SailGame/Core/data"
 )
 
 // CoreServer is derived from Grpc GameCoreServer Interface
@@ -9,16 +10,19 @@ import (
 type CoreServer struct
 {
 	cpb.UnimplementedGameCoreServer
+	mStorage d.Storage
 }
 
 // CoreServerConfig contains necessary parameters when building core server
 type CoreServerConfig struct
 {
-
+	mStorage d.Storage
 }
 
 // NewCoreServer builds a core server
 func NewCoreServer(config *CoreServerConfig) (*CoreServer, error) {
-	return &CoreServer{}, nil
+	cs := CoreServer{}
+	cs.mStorage = config.mStorage
+	return &cs, nil
 }
 
