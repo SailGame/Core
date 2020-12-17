@@ -15,8 +15,8 @@ type Storage interface {
 	FindToken(key string) (Token, error)
 	DelToken(key string) (error)
 
-	RegisterProvider(providerID string, provider interface{}) (error)
-	FindProvider(providerID string) (interface{}, error)
-	FindProviderByGame(gameName string) ([]interface{}, error)
+	RegisterProvider(providerID string, provider Provider) (error)
+	FindProvider(providerID string) (Provider, error)
+	FindProviderByGame(gameName string) ([]Provider)
 	UnRegisterProvider(providerID string) (error)
 }

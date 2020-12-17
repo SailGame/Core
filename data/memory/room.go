@@ -7,7 +7,7 @@ import (
 type Room struct {
 	mGameName string
 	mUsers []d.User
-	mProvider interface{}
+	mProvider d.Provider
 	mState d.RoomState
 }
 
@@ -28,10 +28,10 @@ func (r Room) SetGameName(name string){
 func (r Room) GetUsers() ([]d.User){
 	return r.mUsers
 }
-func (r Room) SetProvider(provider interface{}){
+func (r Room) SetProvider(provider d.Provider){
 	r.mProvider = provider
 }
-func (r Room) GetProvider() (interface{}){
+func (r Room) GetProvider() (d.Provider){
 	return r.mProvider
 }
 func (r Room) GetState() (d.RoomState){

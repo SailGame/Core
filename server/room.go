@@ -20,8 +20,8 @@ func (coreServer *CoreServer) ControlRoom(ctx context.Context, req *cpb.ControlR
 	}
 	if(req.GameName != ""){
 		room.SetGameName(req.GameName)
-		providers, err := coreServer.mStorage.FindProviderByGame(req.GameName)
-		if(err != nil || len(providers) == 0){
+		providers := coreServer.mStorage.FindProviderByGame(req.GameName)
+		if(len(providers) == 0){
 			return &cpb.ControlRoomRet{Errno: cpb.ErrorNumber_ControlRoom_RequiredProviderNotExist}, nil
 		}
 		// TODO: provider selector

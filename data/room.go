@@ -11,8 +11,8 @@ type Room interface {
 	GetGameName() (string)
 	SetGameName(string)
 	GetUsers() ([]User)
-	SetProvider(interface{})
-	GetProvider() (interface{})
+	SetProvider(Provider)
+	GetProvider() (Provider)
 	GetState() (RoomState)
 
 	UserJoin(User) (error)
