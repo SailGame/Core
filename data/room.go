@@ -17,6 +17,8 @@ type Room interface {
 	GetState() (RoomState)
 
 	UserJoin(User) (error)
-	UserReady(User) (error)
+	UserReady(User, bool) (error)
 	UserExit(User) (error)
+
+	Restart() (error)
 }
