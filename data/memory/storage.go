@@ -137,10 +137,10 @@ func (s Storage) DelToken(key string) (error){
 	return nil
 }
 
-func (s Storage) RegisterProvider(providerID string, provider d.Provider) (error){
+func (s Storage) RegisterProvider(provider d.Provider) (error){
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
-	s.mProviders[providerID] = provider
+	s.mProviders[provider.GetID()] = provider
 	return nil
 }
 

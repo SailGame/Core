@@ -1,44 +1,36 @@
 package server
 
 import (
+	"github.com/SailGame/Core/conn/provider"
 	cpb "github.com/SailGame/Core/pb/core"
 )
 
-type providerHandler interface{
-	handle(*cpb.ProviderMsg) (error)
-	disconnect(*providerConn)
-}
-type providerConn struct{
-	commonConn
-	mID string
-	mServer cpb.GameCore_ProviderServer
-	mHandler providerHandler
-}
-
-func newProviderConn(pServer cpb.GameCore_ProviderServer) (*providerConn){
-	conn := &providerConn{
-		mServer: pServer,
-	}
-	conn.mRunning.Store(false)
-	conn.mRecvLoop = conn.recvLoop
-	return conn
-}
-
 func (coreServer CoreServer) Provider(pServer cpb.GameCore_ProviderServer) error {
-	conn := newProviderConn(pServer)
-	conn.start()
+	conn := provider.NewConn(pServer, coreServer)
+	conn.Start()
 	return nil
 }
 
-func (conn providerConn) recvLoop(){
-	defer conn.mRecvLoopWg.Done()
-	for conn.mRunning.Load().(bool) {
-		msg, err := conn.mServer.Recv()
-		if(err != nil){
-			conn.mHandler.disconnect(&conn)
-			conn.mRunning.Store(false)
-			return
-		}
-		conn.mHandler.handle(msg)
+func (coreServer CoreServer) HandleRegisterArgs(providerMsg *cpb.ProviderMsg, regArgs *cpb.RegisterArgs) error {
+	// coreServer.mStorage.RegisterProvider(regArgs.Id)
+	return nil
+}
+
+func (coreServer CoreServer) HandleNotifyMsg(*cpb.ProviderMsg, *cpb.NotifyMsg) error {
+	return nil
+}
+
+func (coreServer CoreServer) HandleStartGameRet(*cpb.ProviderMsg, *cpb.StartGameRet) error {
+	return nil
+}
+
+func (coreServer CoreServer) HandleQueryStateRet(*cpb.ProviderMsg, *cpb.QueryStateRet) error {
+	return nil
+}
+
+func (coreServer CoreServer) Disconnect(conn *provider.Conn) {
+	coreServer.mStorage.UnRegisterProvider(conn.ID)
+	if(conn.ID != ""){
+		coreServer.mProviders.Delete(conn.ID)
 	}
 }

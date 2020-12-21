@@ -39,11 +39,10 @@ func (r Room) GetRoomID() (int32){
 }
 
 func (r Room) GetGameName() (string){
-	return r.mGameName
-}
-
-func (r Room) SetGameName(name string){
-	r.mGameName = name
+	if(r.mProvider == nil){
+		return ""
+	}
+	return r.mProvider.GetGameName()
 }
 
 func (r Room) GetUsers() ([]d.User){
@@ -57,7 +56,15 @@ func (r Room) GetUsers() ([]d.User){
 }
 
 func (r Room) SetProvider(provider d.Provider){
+	if(r.mProvider == provider){
+		return
+	}
+	if(r.mProvider != nil){
+		r.mProvider.DelRoom(r)
+	}
 	r.mProvider = provider
+	r.mGameName = provider.GetGameName()
+	provider.AddRoom(r)
 }
 
 func (r Room) GetProvider() (d.Provider){

@@ -17,7 +17,7 @@ func (coreServer CoreServer) Login(ctx context.Context, req *cpb.LoginArgs) (*cp
 	if err != nil {
 		return &cpb.LoginRet{Errno: cpb.ErrorNumber_UnkownError}, nil
 	}
-	// TODO: points system
+	// TODO: rank system
 	return &cpb.LoginRet{Token: token.GetKey(), Account: &cpb.Account{UserName: user.GetUserName(), Points: 0}}, nil
 }
 
