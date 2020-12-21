@@ -10,4 +10,6 @@ type User interface {
 	// game
 	GetRoom() (Room, error)
 	SetRoom(Room) (error)
+	GetTemporaryID() (int32)	// avoid exposing the username to provider
+	SetTemporaryID(int32)
 }

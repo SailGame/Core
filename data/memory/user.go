@@ -11,6 +11,7 @@ type User struct {
 	mPasswd string
 	mDisplayName string
 	mRoom d.Room
+	mTemporaryID int32
 }
 
 func NewUser(userName string, passwd string) (User){
@@ -59,4 +60,12 @@ func (u User) SetRoom(room d.Room) (error){
 	}
 	u.mRoom = room
 	return nil
+}
+
+func (u User) GetTemporaryID() (int32){
+	return u.mTemporaryID
+}
+
+func (u User) SetTemporaryID(tid int32){
+	u.mTemporaryID = tid
 }

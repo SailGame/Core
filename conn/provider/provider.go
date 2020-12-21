@@ -9,16 +9,17 @@ import (
 )
 
 type Handler interface {
-	HandleRegisterArgs(*cpb.ProviderMsg, *cpb.RegisterArgs) error
-	HandleNotifyMsg(*cpb.ProviderMsg, *cpb.NotifyMsg) error
-	HandleStartGameRet(*cpb.ProviderMsg, *cpb.StartGameRet) error
-	HandleQueryStateRet(*cpb.ProviderMsg, *cpb.QueryStateRet) error
+	HandleRegisterArgs(*Conn, *cpb.ProviderMsg, *cpb.RegisterArgs) error
+	HandleNotifyMsg(*Conn, *cpb.ProviderMsg, *cpb.NotifyMsg) error
 
 	Disconnect(*Conn)
 }
 
 type Conn struct {
-	ID         string
+	// bind to an entity
+	ID         interface{}
+	// used in logging
+	PrintID    string
 
 	mRecvLoopWg sync.WaitGroup
 	mRunning    atomic.Value
@@ -46,15 +47,11 @@ func (conn Conn) RecvLoop() {
 		}
 
 		if submsg := msg.GetRegisterArgs(); submsg != nil{
-			conn.mHandler.HandleRegisterArgs(msg, submsg)
+			conn.mHandler.HandleRegisterArgs(&conn, msg, submsg)
 		}else if submsg := msg.GetNotifyMsg(); submsg != nil{
-			conn.mHandler.HandleNotifyMsg(msg, submsg)
-		}else if submsg := msg.GetStartGameRet(); submsg != nil{
-			conn.mHandler.HandleStartGameRet(msg, submsg)
-		}else if submsg := msg.GetQueryStateRet(); submsg != nil{
-			conn.mHandler.HandleQueryStateRet(msg, submsg)
+			conn.mHandler.HandleNotifyMsg(&conn, msg, submsg)
 		}else{
-			log.Printf("Received unwanted msg (%s) from provider (%s)", msg.String(), conn.ID)
+			log.Printf("Received unwanted msg (%s) from provider %s", msg.String(), conn.PrintID)
 			conn.mHandler.Disconnect(&conn)
 			conn.mRunning.Store(false)
 			return
@@ -76,4 +73,8 @@ func (conn Conn) Stop(sync bool) {
 	if sync {
 		conn.mRecvLoopWg.Wait()
 	}
+}
+
+func (conn Conn) Send(msg *cpb.ProviderMsg) error {
+	return conn.mServer.Send(msg)
 }

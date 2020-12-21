@@ -7,18 +7,13 @@ import (
 	cpb "github.com/SailGame/Core/pb/core"
 )
 
-type userConn struct{
-	mServer cpb.GameCore_ListenServer
-}
-
 // CoreServer is derived from Grpc GameCoreServer Interface
 // the required methods are implemented in separated files like room.go, account.go
 type CoreServer struct
 {
 	cpb.UnimplementedGameCoreServer
 	mStorage d.Storage
-	mClients sync.Map // userName -> userConn
-	mProviders sync.Map // providerID -> providerConn
+	mClients sync.Map // userName -> Conn/Client.Conn
 }
 
 // CoreServerConfig contains necessary parameters when building core server

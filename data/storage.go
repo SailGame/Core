@@ -21,5 +21,5 @@ type Storage interface {
 	GetProviders() ([]Provider)
 	FindProvider(providerID string) (Provider, error)
 	FindProviderByGame(gameName string) ([]Provider)
-	UnRegisterProvider(providerID string) (error)
+	UnRegisterProvider(Provider) (error)
 }
