@@ -8,7 +8,7 @@ import (
 	cpb "github.com/SailGame/Core/pb/core"
 )
 
-func (coreServer CoreServer) CreateRoom(ctx context.Context, req *cpb.CreateRoomArgs) (*cpb.CreateRoomRet, error) {
+func (coreServer *CoreServer) CreateRoom(ctx context.Context, req *cpb.CreateRoomArgs) (*cpb.CreateRoomRet, error) {
 	_, err := coreServer.mStorage.CreateRoom()
 	if err != nil {
 		return &cpb.CreateRoomRet{Errno: cpb.ErrorNumber_UnkownError}, nil
@@ -16,7 +16,7 @@ func (coreServer CoreServer) CreateRoom(ctx context.Context, req *cpb.CreateRoom
 	return &cpb.CreateRoomRet{Errno: cpb.ErrorNumber_OK}, nil
 }
 
-func (coreServer CoreServer) ControlRoom(ctx context.Context, req *cpb.ControlRoomArgs) (*cpb.ControlRoomRet, error) {
+func (coreServer *CoreServer) ControlRoom(ctx context.Context, req *cpb.ControlRoomArgs) (*cpb.ControlRoomRet, error) {
 	room, err := coreServer.mStorage.FindRoom(req.RoomId)
 	if err != nil {
 		return &cpb.ControlRoomRet{Errno: cpb.ErrorNumber_ControlRoom_RoomNotExist}, nil
@@ -34,12 +34,12 @@ func (coreServer CoreServer) ControlRoom(ctx context.Context, req *cpb.ControlRo
 	return &cpb.ControlRoomRet{Errno: cpb.ErrorNumber_OK}, nil
 }
 
-func (coreServer CoreServer) ListRoom(ctx context.Context, req *cpb.ListRoomArgs) (*cpb.ListRoomRet, error) {
+func (coreServer *CoreServer) ListRoom(ctx context.Context, req *cpb.ListRoomArgs) (*cpb.ListRoomRet, error) {
 	// TODO: game name filter
 	return &cpb.ListRoomRet{Errno: cpb.ErrorNumber_OK, Room: toGrpc(coreServer.mStorage.GetRooms())}, nil
 }
 
-func (coreServer CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArgs) (*cpb.JoinRoomRet, error) {
+func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArgs) (*cpb.JoinRoomRet, error) {
 	token, err := coreServer.mStorage.FindToken(req.Token)
 	if err != nil {
 		return &cpb.JoinRoomRet{Errno: cpb.ErrorNumber_JoinRoom_InvalidToken}, nil
@@ -56,7 +56,7 @@ func (coreServer CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArgs
 	return &cpb.JoinRoomRet{Errno: cpb.ErrorNumber_OK}, nil
 }
 
-func (coreServer CoreServer) ExitRoom(ctx context.Context, req *cpb.ExitRoomArgs) (*cpb.ExitRoomRet, error) {
+func (coreServer *CoreServer) ExitRoom(ctx context.Context, req *cpb.ExitRoomArgs) (*cpb.ExitRoomRet, error) {
 	token, err := coreServer.mStorage.FindToken(req.Token)
 	if err != nil {
 		return &cpb.ExitRoomRet{Errno: cpb.ErrorNumber_JoinRoom_InvalidToken}, nil
@@ -65,11 +65,11 @@ func (coreServer CoreServer) ExitRoom(ctx context.Context, req *cpb.ExitRoomArgs
 	return &cpb.ExitRoomRet{Errno: cpb.ErrorNumber_OK}, nil
 }
 
-// func (coreServer CoreServer) QueryRoom(ctx context.Context, req *cpb.QueryRoomArgs) (*cpb.QueryRoomRet, error) {
+// func (coreServer *CoreServer) QueryRoom(ctx context.Context, req *cpb.QueryRoomArgs) (*cpb.QueryRoomRet, error) {
 // 	return nil, nil
 // }
 
-func (coreServer CoreServer) OperationInRoom(ctx context.Context, req *cpb.OperationInRoomArgs) (*cpb.OperationInRoomRet, error) {
+func (coreServer *CoreServer) OperationInRoom(ctx context.Context, req *cpb.OperationInRoomArgs) (*cpb.OperationInRoomRet, error) {
 	token, err := coreServer.mStorage.FindToken(req.Token)
 	if err != nil {
 		return &cpb.OperationInRoomRet{Errno: cpb.ErrorNumber_OperRoom_InvalidToken}, nil
@@ -101,7 +101,7 @@ func (coreServer CoreServer) OperationInRoom(ctx context.Context, req *cpb.Opera
 				},
 			})
 		}
-	}else if custom := req.GetCustom(); custom != nil {
+	} else if custom := req.GetCustom(); custom != nil {
 		pConn.Send(&cpb.ProviderMsg{
 			Msg: &cpb.ProviderMsg_UserOperationArgs{
 				&cpb.UserOperationArgs{

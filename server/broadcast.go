@@ -6,9 +6,9 @@ import (
 	cpb "github.com/SailGame/Core/pb/core"
 )
 
-func (coreServer CoreServer) Listen(req *cpb.ListenArgs, lisServer cpb.GameCore_ListenServer) (error) {
+func (coreServer *CoreServer) Listen(req *cpb.ListenArgs, lisServer cpb.GameCore_ListenServer) error {
 	token, err := coreServer.mStorage.FindToken(req.Token)
-	if(err != nil){
+	if err != nil {
 		return err
 	}
 	conn := client.NewConn(lisServer)

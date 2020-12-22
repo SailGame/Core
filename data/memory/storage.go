@@ -17,14 +17,14 @@ type Storage struct {
 	mMutex sync.Locker
 }
 
-func NewStorage() (Storage){
+func NewStorage() (*Storage){
 	storage := Storage{}
 	storage.mRooms = make(map[int32]*Room)
 	storage.mUsers = make(map[string]*User)
 	storage.mTokens = make(map[string]*Token)
 	storage.mProviders = make(map[string]d.Provider)
 	storage.mMutex = &sync.Mutex{}
-	return storage
+	return &storage
 }
 
 func (s *Storage) CreateRoom() (d.Room, error){
@@ -176,9 +176,9 @@ func (s *Storage) FindProviderByGame(gameName string) ([]d.Provider){
 	return ret
 }
 
-func (s *Storage) UnRegisterProvider(providerID string) (error){
+func (s *Storage) UnRegisterProvider(p d.Provider) (error){
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
-	delete(s.mProviders, providerID)
+	delete(s.mProviders, p.GetID())
 	return nil
 }
