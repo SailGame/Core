@@ -7,7 +7,7 @@ import (
 	cpb "github.com/SailGame/Core/pb/core"
 )
 func toGrpc(rooms []d.Room) ([]*cpb.Room){
-	ret := make([]*cpb.Room, len(rooms))
+	ret := make([]*cpb.Room, 0, len(rooms))
 	for _, v := range rooms {
 		grpcRoom := cpb.Room{
 			GameName: v.GetGameName(),
@@ -20,7 +20,7 @@ func toGrpc(rooms []d.Room) ([]*cpb.Room){
 }
 
 func toUserName(users []d.User) ([]string){
-	ret := make([]string, len(users))
+	ret := make([]string, 0, len(users))
 	for _, v := range users {
 		grpcUser := v.GetUserName()
 		ret = append(ret, grpcUser)
@@ -39,7 +39,7 @@ func toBool(ready cpb.Ready) (bool){
 }
 
 func toUserTempID(users []d.User) ([]uint32){
-	ret := make([]uint32, len(users))
+	ret := make([]uint32, 0, len(users))
 	tid := uint32(1)
 	for _, user := range users {
 		user.SetTemporaryID(tid)

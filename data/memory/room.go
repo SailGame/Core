@@ -23,7 +23,7 @@ type Room struct {
 	mMutex sync.Locker
 }
 
-func NewRoom(ID int32) (Room){
+func NewRoom(ID int32) (*Room){
 	r := Room{}
 	r.mRoomID = ID
 	r.mUsers = make(map[string]d.User)
@@ -31,22 +31,22 @@ func NewRoom(ID int32) (Room){
 	r.mProvider = nil
 	r.mState = d.Preparing
 	r.mMutex = &sync.Mutex{}
-	return r
+	return &r
 }
 
-func (r Room) GetRoomID() (int32){
+func (r *Room) GetRoomID() (int32){
 	return r.mRoomID
 }
 
-func (r Room) GetGameName() (string){
+func (r *Room) GetGameName() (string){
 	if(r.mProvider == nil){
 		return ""
 	}
 	return r.mProvider.GetGameName()
 }
 
-func (r Room) GetUsers() ([]d.User){
-	ret := make([]d.User, len(r.mUsers))
+func (r *Room) GetUsers() ([]d.User){
+	ret := make([]d.User, 0, len(r.mUsers))
 	r.mMutex.Lock()
 	defer r.mMutex.Unlock()
 	for _, v := range r.mUsers {
@@ -55,7 +55,7 @@ func (r Room) GetUsers() ([]d.User){
 	return ret
 }
 
-func (r Room) SetProvider(provider d.Provider){
+func (r *Room) SetProvider(provider d.Provider){
 	if(r.mProvider == provider){
 		return
 	}
@@ -67,15 +67,15 @@ func (r Room) SetProvider(provider d.Provider){
 	provider.AddRoom(r)
 }
 
-func (r Room) GetProvider() (d.Provider){
+func (r *Room) GetProvider() (d.Provider){
 	return r.mProvider
 }
 
-func (r Room) GetState() (d.RoomState){
+func (r *Room) GetState() (d.RoomState){
 	return r.mState
 }
 
-func (r Room) UserJoin(user d.User) (error){
+func (r *Room) UserJoin(user d.User) (error){
 	// TODO: check room capacity
 	r.mMutex.Lock()
 	defer r.mMutex.Unlock()
@@ -85,7 +85,7 @@ func (r Room) UserJoin(user d.User) (error){
 	return nil
 }
 
-func (r Room) UserReady(user d.User, ok bool) (error){
+func (r *Room) UserReady(user d.User, ok bool) (error){
 	r.mMutex.Lock()
 	defer r.mMutex.Unlock()
 	if(r.mState == d.Playing){
@@ -105,7 +105,7 @@ func (r Room) UserReady(user d.User, ok bool) (error){
 	return nil
 }
 
-func (r Room) UserExit(user d.User) (error){
+func (r *Room) UserExit(user d.User) (error){
 	r.mMutex.Lock()
 	defer r.mMutex.Unlock()
 	delete(r.mUsers, user.GetUserName())
@@ -113,7 +113,7 @@ func (r Room) UserExit(user d.User) (error){
 	return nil
 }
 
-func (r Room) Restart() (error){
+func (r *Room) Restart() (error){
 	r.mMutex.Lock()
 	defer r.mMutex.Unlock()
 	for un, _ := range r.mUserState {

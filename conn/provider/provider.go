@@ -36,30 +36,30 @@ func NewConn(pServer cpb.GameCore_ProviderServer, handler Handler) *Conn {
 	return conn
 }
 
-func (conn Conn) RecvLoop() {
+func (conn *Conn) RecvLoop() {
 	defer conn.mRecvLoopWg.Done()
 	for conn.mRunning.Load().(bool) {
 		msg, err := conn.mServer.Recv()
 		if err != nil {
-			conn.mHandler.Disconnect(&conn)
+			conn.mHandler.Disconnect(conn)
 			conn.mRunning.Store(false)
 			return
 		}
 
 		if submsg := msg.GetRegisterArgs(); submsg != nil{
-			conn.mHandler.HandleRegisterArgs(&conn, msg, submsg)
+			conn.mHandler.HandleRegisterArgs(conn, msg, submsg)
 		}else if submsg := msg.GetNotifyMsg(); submsg != nil{
-			conn.mHandler.HandleNotifyMsg(&conn, msg, submsg)
+			conn.mHandler.HandleNotifyMsg(conn, msg, submsg)
 		}else{
 			log.Printf("Received unwanted msg (%s) from provider %s", msg.String(), conn.PrintID)
-			conn.mHandler.Disconnect(&conn)
+			conn.mHandler.Disconnect(conn)
 			conn.mRunning.Store(false)
 			return
 		}
 	}
 }
 
-func (conn Conn) Start() {
+func (conn *Conn) Start() {
 	if conn.mRunning.Load().(bool) {
 		return
 	}
@@ -68,13 +68,13 @@ func (conn Conn) Start() {
 	go conn.RecvLoop()
 }
 
-func (conn Conn) Stop(sync bool) {
+func (conn *Conn) Stop(sync bool) {
 	conn.mRunning.Store(false)
 	if sync {
 		conn.mRecvLoopWg.Wait()
 	}
 }
 
-func (conn Conn) Send(msg *cpb.ProviderMsg) error {
+func (conn *Conn) Send(msg *cpb.ProviderMsg) error {
 	return conn.mServer.Send(msg)
 }

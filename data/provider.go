@@ -42,23 +42,23 @@ func NewCommonProvider(conn interface{}, id string, gameName string) (*CommonPro
 	return provider
 }
 
-func (cp CommonProvider) GetConn() (interface{}, error){
+func (cp *CommonProvider) GetConn() (interface{}, error){
 	if(cp.mConn == nil){
 		return nil, errors.New("No live connection")
 	}
 	return cp.mConn, nil
 }
 
-func (cp CommonProvider) GetID() (string){
+func (cp *CommonProvider) GetID() (string){
 	return cp.mID
 }
 
-func (cp CommonProvider) GetGameName() (string){
+func (cp *CommonProvider) GetGameName() (string){
 	return cp.mGameName
 }
 
-func (cp CommonProvider) GetRooms() ([]Room){
-	ret := make([]Room, len(cp.mRooms))
+func (cp *CommonProvider) GetRooms() ([]Room){
+	ret := make([]Room, 0, len(cp.mRooms))
 	cp.mMutex.Lock()
 	defer cp.mMutex.Unlock()
 	for _, v := range cp.mRooms {
@@ -67,7 +67,7 @@ func (cp CommonProvider) GetRooms() ([]Room){
 	return ret
 }
 
-func (cp CommonProvider) GetRoom(roomId int32) (Room){
+func (cp *CommonProvider) GetRoom(roomId int32) (Room){
 	room, ok := cp.mRooms[roomId]
 	if(!ok){
 		return nil
@@ -75,14 +75,14 @@ func (cp CommonProvider) GetRoom(roomId int32) (Room){
 	return room
 }
 
-func (cp CommonProvider) AddRoom(r Room) (error){
+func (cp *CommonProvider) AddRoom(r Room) (error){
 	cp.mMutex.Lock()
 	defer cp.mMutex.Unlock()
 	cp.mRooms[r.GetRoomID()] = r
 	return nil
 }
 
-func (cp CommonProvider) DelRoom(r Room) (error){
+func (cp *CommonProvider) DelRoom(r Room) (error){
 	cp.mMutex.Lock()
 	defer cp.mMutex.Unlock()
 	// TODO: check existence
