@@ -36,7 +36,7 @@ func (coreServer *CoreServer) HandleNotifyMsg(conn *provider.Conn, providerMsg *
 	if room == nil {
 		return errors.New(fmt.Sprintf("NotifyMsg: Unknown RoomId: (%d) conn: (%s)", notifyMsg.RoomId, conn.PrintID))
 	}
-	// TODO: refactor
+
 	broadcastMsg := &cpb.BroadcastMsg{
 		FromUser: 0,
 		ToUser:   0,

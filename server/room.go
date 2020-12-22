@@ -50,7 +50,6 @@ func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArg
 	}
 	err = room.UserJoin(token.GetUser())
 	if err != nil {
-		// TODO: clearer error?
 		return &cpb.JoinRoomRet{Errno: cpb.ErrorNumber_JoinRoom_FullRoom}, nil
 	}
 	return &cpb.JoinRoomRet{Errno: cpb.ErrorNumber_OK}, nil

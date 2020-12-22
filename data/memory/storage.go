@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"sync"
+	"sync/atomic"
 
 	d "github.com/SailGame/Core/data"
 	"github.com/go-basic/uuid"
@@ -15,6 +16,7 @@ type Storage struct {
 	mTokens map[string]*Token
 	mProviders map[string]d.Provider
 	mMutex sync.Locker
+	mIdentityID int32
 }
 
 func NewStorage() (*Storage){
@@ -24,15 +26,15 @@ func NewStorage() (*Storage){
 	storage.mTokens = make(map[string]*Token)
 	storage.mProviders = make(map[string]d.Provider)
 	storage.mMutex = &sync.Mutex{}
+	storage.mIdentityID = 1
 	return &storage
 }
 
 func (s *Storage) CreateRoom() (d.Room, error){
-	// TODO: if the room is released, the length is not a stable id
+	roomID := atomic.AddInt32(&s.mIdentityID, 1)
+	newRoom := NewRoom(roomID)
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
-	roomID := int32(len(s.mRooms));
-	newRoom := NewRoom(roomID)
 	s.mRooms[roomID] = newRoom
 	return newRoom, nil
 }
@@ -112,7 +114,11 @@ func (s *Storage) DelUser(userName string) (error){
 func (s *Storage) CreateToken(user d.User) (d.Token, error){
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
-	// TODO: clear old token?
+	for k, token := range s.mTokens {
+		if token.GetUserName() == user.GetUserName() {
+			delete(s.mTokens, k)
+		}
+	}
 	uuid := uuid.New()
 	newToken := &Token{mKey: uuid, mUser: user}
 	s.mTokens[uuid] = newToken

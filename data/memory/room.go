@@ -39,6 +39,8 @@ func (r *Room) GetRoomID() (int32){
 }
 
 func (r *Room) GetGameName() (string){
+	r.mMutex.Lock()
+	defer r.mMutex.Unlock()
 	if(r.mProvider == nil){
 		return ""
 	}
@@ -56,6 +58,8 @@ func (r *Room) GetUsers() ([]d.User){
 }
 
 func (r *Room) SetProvider(provider d.Provider){
+	r.mMutex.Lock()
+	defer r.mMutex.Unlock()
 	if(r.mProvider == provider){
 		return
 	}

@@ -68,6 +68,8 @@ func (cp *CommonProvider) GetRooms() ([]Room){
 }
 
 func (cp *CommonProvider) GetRoom(roomId int32) (Room){
+	cp.mMutex.Lock()
+	defer cp.mMutex.Unlock()
 	room, ok := cp.mRooms[roomId]
 	if(!ok){
 		return nil
