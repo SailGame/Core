@@ -11,7 +11,7 @@ type userState int32
 
 const (
 	preparing       userState = 0
-	ready			userState = 1
+	ready           userState = 1
 )
 type Room struct {
 	mRoomID int32
