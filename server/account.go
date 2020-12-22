@@ -8,14 +8,17 @@ import (
 
 func (coreServer *CoreServer) Login(ctx context.Context, req *cpb.LoginArgs) (*cpb.LoginRet, error) {
 	// TODO: User register
-	coreServer.mStorage.CreateUser(req.UserName, req.Password)
+	err := coreServer.mStorage.CreateUser(req.UserName, req.Password)
+	if err != nil {
+		return &cpb.LoginRet{Errno: cpb.ErrorNumber_User_FailToCreateUser}, nil
+	}
 	user, err := coreServer.mStorage.FindUser(req.UserName, req.Password)
 	if err != nil {
-		return &cpb.LoginRet{Errno: cpb.ErrorNumber_UnkownError}, nil
+		return &cpb.LoginRet{Errno: cpb.ErrorNumber_User_FailToFindUser}, nil
 	}
 	token, err := coreServer.mStorage.CreateToken(user)
 	if err != nil {
-		return &cpb.LoginRet{Errno: cpb.ErrorNumber_UnkownError}, nil
+		return &cpb.LoginRet{Errno: cpb.ErrorNumber_User_FailToGenerateToken}, nil
 	}
 	// TODO: rank system
 	return &cpb.LoginRet{Token: token.GetKey(), Account: &cpb.Account{UserName: user.GetUserName(), Points: 0}}, nil

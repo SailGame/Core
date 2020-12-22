@@ -95,7 +95,7 @@ func (s *Storage) FindUser(userName string, passwd string) (d.User, error){
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	user, ok := s.mUsers[userName]
-	if(ok){
+	if !ok {
 		return nil, errors.New("No such user:" + userName)
 	}
 	return user, nil
@@ -123,11 +123,10 @@ func (s *Storage) FindToken(key string) (d.Token, error){
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	token, ok := s.mTokens[key]
-	if(ok){
-		return token, nil
-	}else{
+	if !ok {
 		return nil, errors.New("No such token:" + key)
 	}
+	return token, nil
 }
 
 func (s *Storage) DelToken(key string) (error){

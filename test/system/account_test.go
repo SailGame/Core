@@ -27,7 +27,7 @@ func TestAccountLogin(t *testing.T) {
         So(err, assertions.ShouldBeNil)
         So(ret.Errno, assertions.ShouldEqual, core.ErrorNumber_OK)
         So(ret.Token, assertions.ShouldNotBeBlank)
-        So(ret.GetAccount().GetUserName, assertions.ShouldEqual, userName)
+        So(ret.GetAccount().GetUserName(), assertions.ShouldEqual, userName)
 	})
 }
 
