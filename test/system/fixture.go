@@ -20,10 +20,24 @@ type systemFixture struct {
 
 type userClient struct {
 	mCoreClient cpb.GameCoreClient
+	mLisClient cpb.GameCore_ListenClient
+}
+
+func (uc *userClient) listenToCore(token string) (err error) {
+	uc.mLisClient, err = uc.mCoreClient.Listen(context.Background(), &cpb.ListenArgs{
+		Token: token,
+	})
+	return
 }
 
 type providerClient struct {
 	mCoreClient cpb.GameCoreClient
+	mProviderClient cpb.GameCore_ProviderClient
+}
+
+func (pc *providerClient) connectToCore() (err error) {
+	pc.mProviderClient, err = pc.mCoreClient.Provider(context.Background())
+	return
 }
 
 func newFixture() *systemFixture {

@@ -9,11 +9,11 @@ import (
 )
 
 func (coreServer *CoreServer) CreateRoom(ctx context.Context, req *cpb.CreateRoomArgs) (*cpb.CreateRoomRet, error) {
-	_, err := coreServer.mStorage.CreateRoom()
+	room, err := coreServer.mStorage.CreateRoom()
 	if err != nil {
 		return &cpb.CreateRoomRet{Errno: cpb.ErrorNumber_UnkownError}, nil
 	}
-	return &cpb.CreateRoomRet{Errno: cpb.ErrorNumber_OK}, nil
+	return &cpb.CreateRoomRet{Errno: cpb.ErrorNumber_OK, RoomId: room.GetRoomID()}, nil
 }
 
 func (coreServer *CoreServer) ControlRoom(ctx context.Context, req *cpb.ControlRoomArgs) (*cpb.ControlRoomRet, error) {
@@ -77,7 +77,11 @@ func (coreServer *CoreServer) OperationInRoom(ctx context.Context, req *cpb.Oper
 	if err != nil {
 		return &cpb.OperationInRoomRet{Errno: cpb.ErrorNumber_OperRoom_NotInRoom}, nil
 	}
-	conn, err := room.GetProvider().GetConn()
+	pv := room.GetProvider()
+	if pv == nil {
+		return &cpb.OperationInRoomRet{Errno: cpb.ErrorNumber_OperRoom_ProviderUnavailable}, nil
+	}
+	conn, err := pv.GetConn()
 	if err != nil {
 		return &cpb.OperationInRoomRet{Errno: cpb.ErrorNumber_OperRoom_ProviderUnavailable}, nil
 	}
