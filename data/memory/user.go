@@ -10,6 +10,8 @@ type User struct {
 	mUserName string
 	mPasswd string
 	mDisplayName string
+
+	mConn interface{}
 	mRoom d.Room
 	mTemporaryID uint32
 }
@@ -45,6 +47,17 @@ func (u User) SetPasswd(oldPasswd string, newPasswd string) (error){
 		return errors.New("old passwd mismatch")
 	}
 	return nil
+}
+
+func (u User) GetConn() (interface{}, error){
+	if u.mConn == nil {
+		return nil, errors.New("No live connection")
+	}
+	return u.mConn, nil
+}
+
+func (u User) SetConn(conn interface{}){
+	u.mConn = conn
 }
 
 func (u User) GetRoom() (d.Room, error){

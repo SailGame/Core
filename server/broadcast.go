@@ -12,6 +12,6 @@ func (coreServer CoreServer) Listen(req *cpb.ListenArgs, lisServer cpb.GameCore_
 		return err
 	}
 	conn := client.NewConn(lisServer)
-	coreServer.mClients.Store(token.GetUser().GetUserName(), conn)
+	token.GetUser().SetConn(conn)
 	return nil
 }

@@ -1,8 +1,6 @@
 package server
 
 import (
-	"sync"
-
 	d "github.com/SailGame/Core/data"
 	cpb "github.com/SailGame/Core/pb/core"
 )
@@ -13,7 +11,6 @@ type CoreServer struct
 {
 	cpb.UnimplementedGameCoreServer
 	mStorage d.Storage
-	mClients sync.Map // userName -> Conn/Client.Conn
 }
 
 // CoreServerConfig contains necessary parameters when building core server
@@ -28,4 +25,3 @@ func NewCoreServer(config *CoreServerConfig) (*CoreServer, error) {
 	cs.mStorage = config.mStorage
 	return &cs, nil
 }
-

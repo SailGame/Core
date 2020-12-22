@@ -45,13 +45,17 @@ func (coreServer CoreServer) HandleNotifyMsg(conn *provider.Conn, providerMsg *c
 		},
 	}
 	for _, user := range room.GetUsers() {
-		value, ok := coreServer.mClients.Load(user.GetUserName())
-		if(!ok){
-			return errors.New(fmt.Sprintf("NotifyMsg: User (%s) not exist", user.GetUserName()))
+		conn, err := user.GetConn()
+		if err != nil {
+			return errors.New(fmt.Sprintf("NotifyMsg: User (%s) disconnected", user.GetUserName()))
 		}
-		clientConn := value.(*client.Conn)
+		clientConn := conn.(*client.Conn)
 		if((notifyMsg.UserId == 0) || (notifyMsg.UserId > 0 && uint32(notifyMsg.UserId) == user.GetTemporaryID()) || (uint32(-notifyMsg.UserId) != user.GetTemporaryID())){
-			clientConn.Send(broadcastMsg)
+			err = clientConn.Send(broadcastMsg)
+			if err != nil {
+				user.SetConn(nil)
+				return errors.New(fmt.Sprintf("NotifyMsg: User (%s) disconnected", user.GetUserName()))
+			}
 		}
 	}
 
