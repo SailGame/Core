@@ -17,7 +17,7 @@ func (coreServer CoreServer) Provider(pServer cpb.GameCore_ProviderServer) error
 }
 
 func (coreServer CoreServer) HandleRegisterArgs(conn *provider.Conn, providerMsg *cpb.ProviderMsg, regArgs *cpb.RegisterArgs) error {
-	p := d.NewCommonProvider(regArgs.Id, regArgs.GameName)
+	p := d.NewCommonProvider(conn, regArgs.Id, regArgs.GameName)
 	if err := coreServer.mStorage.RegisterProvider(p); err != nil{
 		return err
 	}
@@ -50,7 +50,7 @@ func (coreServer CoreServer) HandleNotifyMsg(conn *provider.Conn, providerMsg *c
 			return errors.New(fmt.Sprintf("NotifyMsg: User (%s) not exist", user.GetUserName()))
 		}
 		clientConn := value.(*client.Conn)
-		if((notifyMsg.UserId == 0) || (notifyMsg.UserId > 0 && notifyMsg.UserId == user.GetTemporaryID()) || (-notifyMsg.UserId != user.GetTemporaryID())){
+		if((notifyMsg.UserId == 0) || (notifyMsg.UserId > 0 && uint32(notifyMsg.UserId) == user.GetTemporaryID()) || (uint32(-notifyMsg.UserId) != user.GetTemporaryID())){
 			clientConn.Send(broadcastMsg)
 		}
 	}

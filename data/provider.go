@@ -1,6 +1,9 @@
 package data
 
-import "sync"
+import (
+	"errors"
+	"sync"
+)
 
 // Provider supports at least one kind of game, and connects to core server
 // as there is a live connection, provider is always in-memory
@@ -9,6 +12,7 @@ import "sync"
 // e.g. UnoProvider, TexasProvider are both derived from CommonProvider
 // and they have some custom functions.
 type Provider interface {
+	GetConn() (interface{}, error)
 	GetID() (string)
 	GetGameName() (string)
 	GetRooms() ([]Room)
@@ -20,20 +24,29 @@ type Provider interface {
 
 // CommonProvider has the basic functionality of a 'provider'
 type CommonProvider struct {
+	mConn interface{}
 	mID string
 	mGameName string
 	mRooms map[int32]Room
 	mMutex sync.Locker
 }
 
-func NewCommonProvider(id string, gameName string) (*CommonProvider) {
+func NewCommonProvider(conn interface{}, id string, gameName string) (*CommonProvider) {
 	provider := &CommonProvider{
+		mConn: conn,
 		mID: id,
 		mGameName: gameName,
 		mRooms: make(map[int32]Room),
 		mMutex: &sync.Mutex{},
 	}
 	return provider
+}
+
+func (cp CommonProvider) GetConn() (interface{}, error){
+	if(cp.mConn == nil){
+		return nil, errors.New("No live connection")
+	}
+	return cp.mConn, nil
 }
 
 func (cp CommonProvider) GetID() (string){
