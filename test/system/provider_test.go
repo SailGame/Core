@@ -71,6 +71,7 @@ func TestGameStart(t *testing.T) {
 		go Convey("uc recv", t, func() {
 			msg, err := uc.mLisClient.Recv()
 
+			t.Logf("TestUser receive start game")
 			So(err, assertions.ShouldBeNil)
 			So(msg.GetCustom(), assertions.ShouldNotBeNil)
 			wg.Done()
@@ -81,13 +82,25 @@ func TestGameStart(t *testing.T) {
 
 			So(err, assertions.ShouldBeNil)
 			So(msg.GetStartGameArgs(), assertions.ShouldNotBeNil)
+
+			t.Logf("TestProvider send start to TestUser")
+			err = pc.mProviderClient.Send(&cpb.ProviderMsg{
+				Msg: &cpb.ProviderMsg_NotifyMsg{
+					&cpb.NotifyMsg{
+						RoomId: msg.GetStartGameArgs().GetRoomId(),
+						UserId: 0, // broadcast
+						Custom: nil,
+					},
+				},
+			})
+			So(err, assertions.ShouldBeNil)
 			wg.Done()
 		})
 
-		var ch chan interface{}
+		ch := make(chan int)
 		go func() {
 			wg.Wait()
-			ch <- nil
+			ch <- 1
 		}()
 
 		select {

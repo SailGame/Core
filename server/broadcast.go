@@ -13,5 +13,6 @@ func (coreServer *CoreServer) Listen(req *cpb.ListenArgs, lisServer cpb.GameCore
 	}
 	conn := client.NewConn(lisServer)
 	token.GetUser().SetConn(conn)
+	conn.Start()
 	return nil
 }

@@ -37,8 +37,7 @@ func NewConn(pServer cpb.GameCore_ProviderServer, handler Handler) *Conn {
 }
 
 func (conn *Conn) RecvLoop() {
-	defer conn.mRecvLoopWg.Done()
-	for conn.mRunning.Load().(bool) {
+	for {
 		msg, err := conn.mServer.Recv()
 		if err != nil {
 			log.Warnf("Provider (%s) disconnected (%s)", conn.PrintID, err.Error())
@@ -46,7 +45,8 @@ func (conn *Conn) RecvLoop() {
 			conn.mRunning.Store(false)
 			return
 		}
-
+		log.Debugf("Provider connection (%s) recv msg (%s)", conn.PrintID, msg.String())
+	
 		if submsg := msg.GetRegisterArgs(); submsg != nil{
 			conn.mHandler.HandleRegisterArgs(conn, msg, submsg)
 		}else if submsg := msg.GetNotifyMsg(); submsg != nil{
@@ -58,6 +58,7 @@ func (conn *Conn) RecvLoop() {
 			return
 		}
 	}
+
 }
 
 func (conn *Conn) Start() {
@@ -68,17 +69,22 @@ func (conn *Conn) Start() {
 	conn.mRunning.Store(true)
 	conn.mRecvLoopWg.Add(1)
 	go conn.RecvLoop()
+	conn.mRecvLoopWg.Wait()
 }
 
-func (conn *Conn) Stop(sync bool) {
-	log.Debugf("Provider connection (%s) received stop signal ", conn.PrintID)
-	conn.mRunning.Store(false)
-	if sync {
-		conn.mRecvLoopWg.Wait()
+func (conn *Conn) Close() {
+	if !conn.mRunning.Load().(bool) {
+		return
 	}
+	log.Debugf("Provider connection (%s) received stop signal ", conn.PrintID)
+	conn.mRecvLoopWg.Done()
 }
 
 func (conn *Conn) Send(msg *cpb.ProviderMsg) error {
-	log.Debugf("Provider connection (%s) sent msg (%d)", conn.PrintID, msg.GetSequenceId())
-	return conn.mServer.Send(msg)
+	log.Debugf("Provider connection (%s) send msg (%s)", conn.PrintID, msg.String())
+	err := conn.mServer.Send(msg)
+	if err != nil {
+		log.Debug(err)
+	}
+	return err
 }

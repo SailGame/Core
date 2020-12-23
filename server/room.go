@@ -116,5 +116,5 @@ func (coreServer *CoreServer) OperationInRoom(ctx context.Context, req *cpb.Oper
 		})
 	}
 
-	return nil, nil
+	return &cpb.OperationInRoomRet{Errno: cpb.ErrorNumber_OK}, nil
 }
