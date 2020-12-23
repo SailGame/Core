@@ -6,17 +6,20 @@ import (
 	d "github.com/SailGame/Core/data"
 	cpb "github.com/SailGame/Core/pb/core"
 )
-func toGrpc(rooms []d.Room) ([]*cpb.Room){
+func toGrpcRooms(rooms []d.Room) ([]*cpb.Room){
 	ret := make([]*cpb.Room, 0, len(rooms))
 	for _, v := range rooms {
-		grpcRoom := cpb.Room{
-			GameName: v.GetGameName(),
-			RoomId: v.GetRoomID(),
-			UserName: toUserName(v.GetUsers()),
-		}
-		ret = append(ret, &grpcRoom)
+		ret = append(ret, toGrpcRoom(v))
 	}
 	return ret
+}
+
+func toGrpcRoom(room d.Room) (*cpb.Room){
+	return &cpb.Room{
+		GameName: room.GetGameName(),
+		RoomId: room.GetRoomID(),
+		UserName: toUserName(room.GetUsers()),
+	}
 }
 
 func toUserName(users []d.User) ([]string){

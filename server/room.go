@@ -36,7 +36,7 @@ func (coreServer *CoreServer) ControlRoom(ctx context.Context, req *cpb.ControlR
 
 func (coreServer *CoreServer) ListRoom(ctx context.Context, req *cpb.ListRoomArgs) (*cpb.ListRoomRet, error) {
 	// TODO: game name filter
-	return &cpb.ListRoomRet{Errno: cpb.ErrorNumber_OK, Room: toGrpc(coreServer.mStorage.GetRooms())}, nil
+	return &cpb.ListRoomRet{Errno: cpb.ErrorNumber_OK, Room: toGrpcRooms(coreServer.mStorage.GetRooms())}, nil
 }
 
 func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArgs) (*cpb.JoinRoomRet, error) {
@@ -64,9 +64,13 @@ func (coreServer *CoreServer) ExitRoom(ctx context.Context, req *cpb.ExitRoomArg
 	return &cpb.ExitRoomRet{Errno: cpb.ErrorNumber_OK}, nil
 }
 
-// func (coreServer *CoreServer) QueryRoom(ctx context.Context, req *cpb.QueryRoomArgs) (*cpb.QueryRoomRet, error) {
-// 	return nil, nil
-// }
+func (coreServer *CoreServer) QueryRoom(ctx context.Context, req *cpb.QueryRoomArgs) (*cpb.QueryRoomRet, error) {
+	room, err := coreServer.mStorage.FindRoom(req.GetRoomId())
+	if err != nil {
+		return &cpb.QueryRoomRet{Errno: cpb.ErrorNumber_QryRoom_InvalidRoomID}, nil
+	}
+	return &cpb.QueryRoomRet{Errno: cpb.ErrorNumber_OK, Room: toGrpcRoom(room)}, nil
+}
 
 func (coreServer *CoreServer) OperationInRoom(ctx context.Context, req *cpb.OperationInRoomArgs) (*cpb.OperationInRoomRet, error) {
 	token, err := coreServer.mStorage.FindToken(req.Token)
