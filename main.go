@@ -9,6 +9,7 @@ import (
 	cpb "github.com/SailGame/Core/pb/core"
 	"github.com/SailGame/Core/server"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func init() {
@@ -36,6 +37,7 @@ func main() {
 		panic(err)
 	}
 	cpb.RegisterGameCoreServer(s, coreServer)
+	reflection.Register(s)
 	log.Info("rpc server start")
 	s.Serve(lis)
 }
