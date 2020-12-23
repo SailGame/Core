@@ -2,8 +2,9 @@ package system
 
 import (
 	"context"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net"
+	"os"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/test/bufconn"
@@ -16,6 +17,7 @@ type systemFixture struct {
 	mCoreServer *server.CoreServer
 	mLis *bufconn.Listener
 	mCtx context.Context
+	mConn *grpc.ClientConn
 }
 
 type userClient struct {
@@ -41,6 +43,9 @@ func (pc *providerClient) connectToCore() (err error) {
 }
 
 func newFixture() *systemFixture {
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
 	const bufSize = 1024 * 1024
 	return &systemFixture{
 		mCtx: context.Background(),

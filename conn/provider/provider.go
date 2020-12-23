@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 	"sync"
 	"sync/atomic"
 
@@ -41,6 +41,7 @@ func (conn *Conn) RecvLoop() {
 	for conn.mRunning.Load().(bool) {
 		msg, err := conn.mServer.Recv()
 		if err != nil {
+			log.Warnf("Provider (%s) disconnected (%s)", conn.PrintID, err.Error())
 			conn.mHandler.Disconnect(conn)
 			conn.mRunning.Store(false)
 			return
@@ -51,7 +52,7 @@ func (conn *Conn) RecvLoop() {
 		}else if submsg := msg.GetNotifyMsg(); submsg != nil{
 			conn.mHandler.HandleNotifyMsg(conn, msg, submsg)
 		}else{
-			log.Printf("Received unwanted msg (%s) from provider %s", msg.String(), conn.PrintID)
+			log.Warnf("Received unwanted msg (%s) from provider %s", msg.String(), conn.PrintID)
 			conn.mHandler.Disconnect(conn)
 			conn.mRunning.Store(false)
 			return
@@ -63,12 +64,14 @@ func (conn *Conn) Start() {
 	if conn.mRunning.Load().(bool) {
 		return
 	}
+	log.Debugf("Provider connection started")
 	conn.mRunning.Store(true)
 	conn.mRecvLoopWg.Add(1)
 	go conn.RecvLoop()
 }
 
 func (conn *Conn) Stop(sync bool) {
+	log.Debugf("Provider connection (%s) received stop signal ", conn.PrintID)
 	conn.mRunning.Store(false)
 	if sync {
 		conn.mRecvLoopWg.Wait()
@@ -76,5 +79,6 @@ func (conn *Conn) Stop(sync bool) {
 }
 
 func (conn *Conn) Send(msg *cpb.ProviderMsg) error {
+	log.Debugf("Provider connection (%s) sent msg (%d)", conn.PrintID, msg.GetSequenceId())
 	return conn.mServer.Send(msg)
 }

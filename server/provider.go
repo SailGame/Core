@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/SailGame/Core/conn/client"
 	"github.com/SailGame/Core/conn/provider"
@@ -11,18 +12,21 @@ import (
 )
 
 func (coreServer *CoreServer) Provider(pServer cpb.GameCore_ProviderServer) error {
+	log.Info("Provider connected")
 	conn := provider.NewConn(pServer, coreServer)
 	conn.Start()
 	return nil
 }
 
 func (coreServer *CoreServer) HandleRegisterArgs(conn *provider.Conn, providerMsg *cpb.ProviderMsg, regArgs *cpb.RegisterArgs) error {
-	p := d.NewCommonProvider(conn, regArgs.Id, regArgs.GameName)
+	p := d.NewCommonProvider(conn, regArgs.GetId(), regArgs.GetGameName())
 	if err := coreServer.mStorage.RegisterProvider(p); err != nil {
-		return err
+		log.Warnf("Provider register failed: (%s) (%s) (%s)", regArgs.GetId(), regArgs.GetGameName(), err.Error())
+		return nil
 	}
+	log.Infof("Provider register: (%s) (%s)", regArgs.GetId(), regArgs.GetGameName())
 	conn.ID = p
-	conn.PrintID = regArgs.Id + ":" + regArgs.GameName
+	conn.PrintID = regArgs.GetId() + ":" + regArgs.GetGameName()
 	return nil
 }
 

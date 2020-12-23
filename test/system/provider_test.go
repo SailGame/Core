@@ -35,8 +35,7 @@ func TestGameStart(t *testing.T) {
 
 		pcId := "testProvider"
 		pc := f.newProviderClient()
-		err = pc.connectToCore()
-		So(err, assertions.ShouldBeNil)
+		So(pc.connectToCore(), assertions.ShouldBeNil)
 
 		err = pc.mProviderClient.Send(&cpb.ProviderMsg{
 			Msg: &cpb.ProviderMsg_RegisterArgs{

@@ -2,7 +2,7 @@ package memory
 
 import (
 	"errors"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"sync"
 	"sync/atomic"
 
@@ -56,7 +56,7 @@ func (s *Storage) FindRoom(roomID int32) (d.Room, error){
 	if(ok){
 		return room, nil
 	} else{
-		log.Printf("Room (%d) not exist", roomID)
+		log.Warnf("Room (%d) not exist", roomID)
 		return nil, errors.New("Room not exist");
 	}
 }
