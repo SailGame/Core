@@ -146,6 +146,8 @@ func (coreServer *CoreServer) OperationInRoom(ctx context.Context, req *cpb.Oper
 				},
 			},
 		})
+	} else {
+		return &cpb.OperationInRoomRet{Errno: cpb.ErrorNumber_UnkownError}, nil
 	}
 
 	return &cpb.OperationInRoomRet{Errno: cpb.ErrorNumber_OK}, nil
