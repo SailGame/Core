@@ -35,8 +35,10 @@ func (coreServer *CoreServer) ControlRoom(ctx context.Context, req *cpb.ControlR
 }
 
 func (coreServer *CoreServer) ListRoom(ctx context.Context, req *cpb.ListRoomArgs) (*cpb.ListRoomRet, error) {
-	// TODO: game name filter
-	return &cpb.ListRoomRet{Errno: cpb.ErrorNumber_OK, Room: toGrpcRooms(coreServer.mStorage.GetRooms())}, nil
+	filter := func(r d.Room) bool {
+		return req.GetGameName() == "" || r.GetGameName() == req.GetGameName()
+	}
+	return &cpb.ListRoomRet{Errno: cpb.ErrorNumber_OK, Room: toGrpcRooms(coreServer.mStorage.GetRoomsWithFilter(filter))}, nil
 }
 
 func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArgs) (*cpb.JoinRoomRet, error) {
@@ -44,13 +46,27 @@ func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArg
 	if err != nil {
 		return &cpb.JoinRoomRet{Errno: cpb.ErrorNumber_JoinRoom_InvalidToken}, nil
 	}
+	user := token.GetUser()
 	room, err := coreServer.mStorage.FindRoom(req.RoomId)
 	if err != nil {
 		return &cpb.JoinRoomRet{Errno: cpb.ErrorNumber_JoinRoom_InvalidRoomID}, nil
 	}
-	err = room.UserJoin(token.GetUser())
+	curRoom, err := user.GetRoom()
+	if curRoom == room {
+		return &cpb.JoinRoomRet{Errno: cpb.ErrorNumber_OK}, nil
+	}else if curRoom != nil {
+		err := curRoom.UserExit(user)
+		if err != nil {
+			return &cpb.JoinRoomRet{Errno: cpb.ErrorNumber_JoinRoom_UserIsInAnotherRoomAndFailToExit}, nil
+		}
+	}
+	err = room.UserJoin(user)
 	if err != nil {
 		return &cpb.JoinRoomRet{Errno: cpb.ErrorNumber_JoinRoom_FullRoom}, nil
+	}
+	err = user.SetRoom(room)
+	if err != nil {
+		return &cpb.JoinRoomRet{Errno: cpb.ErrorNumber_UnkownError}, nil
 	}
 	return &cpb.JoinRoomRet{Errno: cpb.ErrorNumber_OK}, nil
 }
@@ -58,9 +74,21 @@ func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArg
 func (coreServer *CoreServer) ExitRoom(ctx context.Context, req *cpb.ExitRoomArgs) (*cpb.ExitRoomRet, error) {
 	token, err := coreServer.mStorage.FindToken(req.Token)
 	if err != nil {
-		return &cpb.ExitRoomRet{Errno: cpb.ErrorNumber_JoinRoom_InvalidToken}, nil
+		return &cpb.ExitRoomRet{Errno: cpb.ErrorNumber_ExitRoom_InvalidToken}, nil
 	}
-	token.GetUser().SetRoom(nil)
+	user := token.GetUser()
+	room, err := user.GetRoom()
+	if err != nil {
+		return &cpb.ExitRoomRet{Errno: cpb.ErrorNumber_ExitRoom_NotInRoom}, nil
+	}
+	err = room.UserExit(user)
+	if err != nil {
+		return &cpb.ExitRoomRet{Errno: cpb.ErrorNumber_UnkownError}, nil
+	}
+	err = user.SetRoom(nil)
+	if err != nil {
+		return &cpb.ExitRoomRet{Errno: cpb.ErrorNumber_UnkownError}, nil
+	}
 	return &cpb.ExitRoomRet{Errno: cpb.ErrorNumber_OK}, nil
 }
 

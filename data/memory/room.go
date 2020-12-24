@@ -12,6 +12,8 @@ type userState int32
 const (
 	preparing       userState = 0
 	ready           userState = 1
+	// will be deleted after game over
+	exited			userState = 2
 )
 type Room struct {
 	mRoomID int32
@@ -83,9 +85,12 @@ func (r *Room) UserJoin(user d.User) (error){
 	// TODO: check room capacity
 	r.mMutex.Lock()
 	defer r.mMutex.Unlock()
+	if(r.mState == d.Playing){
+		
+		return errors.New("Not support change user state when game is playing")
+	}
 	r.mUsers[user.GetUserName()] = user
 	r.mUserState[user.GetUserName()] = preparing
-	user.SetRoom(r)
 	return nil
 }
 
@@ -112,8 +117,13 @@ func (r *Room) UserReady(user d.User, ok bool) (error){
 func (r *Room) UserExit(user d.User) (error){
 	r.mMutex.Lock()
 	defer r.mMutex.Unlock()
-	delete(r.mUsers, user.GetUserName())
-	delete(r.mUserState, user.GetUserName())
+	if r.mState == d.Playing {
+		r.mUserState[user.GetUserName()] = exited
+	}else
+	{
+		delete(r.mUsers, user.GetUserName())
+		delete(r.mUserState, user.GetUserName())
+	}
 	return nil
 }
 

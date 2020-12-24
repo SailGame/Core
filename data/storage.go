@@ -5,6 +5,7 @@ package data
 type Storage interface {
 	CreateRoom() (Room, error)
 	GetRooms() ([]Room)
+	GetRoomsWithFilter(func(Room) bool) ([]Room)
 	FindRoom(roomID int32) (Room, error)
 	DelRoom(roomID int32) (error)
 

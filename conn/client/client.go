@@ -11,18 +11,23 @@ type Conn struct{
 	mServer cpb.GameCore_ListenServer
 	mWg sync.WaitGroup
 	mRunning atomic.Value
+	mMutex sync.Locker
 }
 
 func NewConn(server cpb.GameCore_ListenServer) (*Conn) {
 	conn := &Conn{
 		mServer: server,
+		mMutex: &sync.Mutex{},
 	}
 	conn.mRunning.Store(false)
 	return conn
 }
 
 func (conn *Conn) Send(msg *cpb.BroadcastMsg) (error) {
-	return conn.mServer.Send(msg)
+	conn.mMutex.Lock()
+	err := conn.mServer.Send(msg)
+	conn.mMutex.Unlock()
+	return err
 }
 
 func (conn *Conn) Start() {

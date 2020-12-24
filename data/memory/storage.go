@@ -40,11 +40,17 @@ func (s *Storage) CreateRoom() (d.Room, error){
 }
 
 func (s *Storage) GetRooms() ([]d.Room){
+	return s.GetRoomsWithFilter(func(d.Room) bool {return true})
+}
+
+func (s *Storage) GetRoomsWithFilter(is func(d.Room) bool) ([]d.Room) {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	ret := make([]d.Room, 0, len(s.mRooms))
 	for _, v := range s.mRooms {
-		ret = append(ret, v)
+		if is(v) {
+			ret = append(ret, v)
+		}
 	}
 	return ret
 }

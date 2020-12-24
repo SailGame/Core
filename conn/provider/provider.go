@@ -25,12 +25,14 @@ type Conn struct {
 	mRunning    atomic.Value
 	mServer     cpb.GameCore_ProviderServer
 	mHandler    Handler
+	mMutex		sync.Locker
 }
 
 func NewConn(pServer cpb.GameCore_ProviderServer, handler Handler) *Conn {
 	conn := &Conn{
 		mServer: pServer,
 		mHandler: handler,
+		mMutex: &sync.Mutex{},
 	}
 	conn.mRunning.Store(false)
 	return conn
@@ -82,7 +84,9 @@ func (conn *Conn) Close() {
 
 func (conn *Conn) Send(msg *cpb.ProviderMsg) error {
 	log.Debugf("Provider connection (%s) send msg (%s)", conn.PrintID, msg.String())
+	conn.mMutex.Lock()
 	err := conn.mServer.Send(msg)
+	conn.mMutex.Unlock()
 	if err != nil {
 		log.Debug(err)
 	}

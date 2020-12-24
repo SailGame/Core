@@ -67,10 +67,8 @@ func (u *User) GetRoom() (d.Room, error){
 		return nil, errors.New("Not in a room")
 	}
 }
+
 func (u *User) SetRoom(room d.Room) (error){
-	if(u.mRoom != nil && u.mRoom != room){
-		u.mRoom.UserExit(u)
-	}
 	u.mRoom = room
 	return nil
 }
