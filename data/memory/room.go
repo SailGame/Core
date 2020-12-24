@@ -2,6 +2,7 @@ package memory
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 
 	d "github.com/SailGame/Core/data"
@@ -86,21 +87,30 @@ func (r *Room) UserJoin(user d.User) (error){
 	r.mMutex.Lock()
 	defer r.mMutex.Unlock()
 	if(r.mState == d.Playing){
-		
-		return errors.New("Not support change user state when game is playing")
+		_, ok := r.mUsers[user.GetUserName()]
+		if ok && r.mUserState[user.GetUserName()] == exited {
+			r.mUserState[user.GetUserName()] = ready
+		}else
+		{
+			return errors.New("Not support change user state when game is playing")
+		}
 	}
 	r.mUsers[user.GetUserName()] = user
 	r.mUserState[user.GetUserName()] = preparing
 	return nil
 }
 
-func (r *Room) UserReady(user d.User, ok bool) (error){
+func (r *Room) UserReady(user d.User, isReady bool) (error){
 	r.mMutex.Lock()
 	defer r.mMutex.Unlock()
+	_, ok := r.mUsers[user.GetUserName()]
+	if !ok {
+		return errors.New(fmt.Sprintf("No such user(%s) in room(%d)", user.GetUserName(), r.mRoomID))
+	}
 	if(r.mState == d.Playing){
 		return errors.New("Not support change user state when game is playing")
 	}
-	if(ok){
+	if(isReady){
 		r.mUserState[user.GetUserName()] = ready
 	}else {
 		r.mUserState[user.GetUserName()] = preparing
@@ -117,6 +127,10 @@ func (r *Room) UserReady(user d.User, ok bool) (error){
 func (r *Room) UserExit(user d.User) (error){
 	r.mMutex.Lock()
 	defer r.mMutex.Unlock()
+	_, ok := r.mUsers[user.GetUserName()]
+	if !ok {
+		return errors.New(fmt.Sprintf("No such user(%s) in room(%d)", user.GetUserName(), r.mRoomID))
+	}
 	if r.mState == d.Playing {
 		r.mUserState[user.GetUserName()] = exited
 	}else
@@ -130,8 +144,13 @@ func (r *Room) UserExit(user d.User) (error){
 func (r *Room) Restart() (error){
 	r.mMutex.Lock()
 	defer r.mMutex.Unlock()
-	for un, _ := range r.mUserState {
-		r.mUserState[un] = preparing
+	for un, state := range r.mUserState {
+		if state == ready {
+			r.mUserState[un] = preparing
+		}else if state == exited {
+			delete(r.mUsers, un)
+			delete(r.mUserState, un)
+		}
 	}
 	return nil
 }
