@@ -9,13 +9,13 @@ type Token struct {
 	mUser d.User
 }
 
-func (t Token) GetKey() string {
+func (t *Token) GetKey() string {
 	return t.mKey
 }
 
-func (t Token) GetUser() d.User {
+func (t *Token) GetUser() d.User {
 	return t.mUser
 }
-func (t Token) GetUserName() string {
+func (t *Token) GetUserName() string {
 	return t.mUser.GetUserName()
 }

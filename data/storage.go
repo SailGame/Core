@@ -5,6 +5,7 @@ package data
 type Storage interface {
 	CreateRoom() (Room, error)
 	GetRooms() ([]Room)
+	GetRoomsWithFilter(func(Room) bool) ([]Room)
 	FindRoom(roomID int32) (Room, error)
 	DelRoom(roomID int32) (error)
 
@@ -17,9 +18,9 @@ type Storage interface {
 	FindToken(key string) (Token, error)
 	DelToken(key string) (error)
 
-	RegisterProvider(providerID string, provider Provider) (error)
+	RegisterProvider(Provider) (error)
 	GetProviders() ([]Provider)
 	FindProvider(providerID string) (Provider, error)
 	FindProviderByGame(gameName string) ([]Provider)
-	UnRegisterProvider(providerID string) (error)
+	UnRegisterProvider(Provider) (error)
 }

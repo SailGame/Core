@@ -1,9 +1,18 @@
 package server
 
-// import (
-// 	cpb "github.com/SailGame/Core/pb/core"
-// )
+import (
+	"github.com/SailGame/Core/conn/client"
 
-// func (coreServer *CoreServer) Listen(req *cpb.ListenArgs, lisServer cpb.GameCore_ListenServer) (error) {
-// 	return nil
-// }
+	cpb "github.com/SailGame/Core/pb/core"
+)
+
+func (coreServer *CoreServer) Listen(req *cpb.ListenArgs, lisServer cpb.GameCore_ListenServer) error {
+	token, err := coreServer.mStorage.FindToken(req.Token)
+	if err != nil {
+		return err
+	}
+	conn := client.NewConn(lisServer)
+	token.GetUser().SetConn(conn)
+	conn.Start()
+	return nil
+}

@@ -10,13 +10,14 @@ const (
 type Room interface {
 	GetRoomID() (int32)
 	GetGameName() (string)
-	SetGameName(string)
 	GetUsers() ([]User)
 	SetProvider(Provider)
 	GetProvider() (Provider)
 	GetState() (RoomState)
 
 	UserJoin(User) (error)
-	UserReady(User) (error)
+	UserReady(User, bool) (error)
 	UserExit(User) (error)
+
+	Restart() (error)
 }

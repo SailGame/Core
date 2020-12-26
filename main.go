@@ -1,17 +1,27 @@
 package main
 
 import (
-	"log"
 	"net"
+	"os"
 
-	"github.com/SailGame/Core/server"
+	log "github.com/sirupsen/logrus"
+
 	cpb "github.com/SailGame/Core/pb/core"
+	"github.com/SailGame/Core/server"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func init() {
-	log.SetPrefix("TRACE: ")
-	log.SetFlags(log.Ldate | log.Lmicroseconds | log.Llongfile)
+	// Log as JSON instead of the default ASCII formatter.
+	log.SetFormatter(&log.JSONFormatter{})
+
+	// Output to stdout instead of the default stderr
+	// Can be any io.Writer, see below for File example
+	log.SetOutput(os.Stdout)
+
+	// Only log the warning severity or above.
+	log.SetLevel(log.WarnLevel)
 }
 
 func main() {
@@ -24,9 +34,10 @@ func main() {
 	s := grpc.NewServer()
 	coreServer, err := server.NewCoreServer(&server.CoreServerConfig{})
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to create core server: %v", err)
 	}
 	cpb.RegisterGameCoreServer(s, coreServer)
-	log.Println("rpc server start")
+	reflection.Register(s)
+	log.Info("rpc server start")
 	s.Serve(lis)
 }
