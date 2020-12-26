@@ -13,20 +13,20 @@ import (
 )
 
 func TestAccountLogin(t *testing.T) {
-    Convey("Login Successfully", t, func() {
-        f := newFixture()
-        f.init(&server.CoreServerConfig{
-            MStorage: memory.NewStorage(),
-        })
-        uc := f.newUserClient()
-        userName := "test"
-        ret, err := uc.mCoreClient.Login(context.TODO(), &core.LoginArgs{
-            UserName: userName,
-            Password: "",
-        })
-        So(err, assertions.ShouldBeNil)
-        So(ret.Errno, assertions.ShouldEqual, core.ErrorNumber_OK)
-        So(ret.Token, assertions.ShouldNotBeBlank)
-        So(ret.GetAccount().GetUserName(), assertions.ShouldEqual, userName)
+	Convey("Login Successfully", t, func() {
+		f := newFixture()
+		f.init(&server.CoreServerConfig{
+			MStorage: memory.NewStorage(),
+		})
+		uc := f.newUserClient()
+		userName := "test"
+		ret, err := uc.mCoreClient.Login(context.TODO(), &core.LoginArgs{
+			UserName: userName,
+			Password: "",
+		})
+		So(err, assertions.ShouldBeNil)
+		So(ret.Err, assertions.ShouldEqual, core.ErrorNumber_OK)
+		So(ret.Token, assertions.ShouldNotBeBlank)
+		So(ret.GetAccount().GetUserName(), assertions.ShouldEqual, userName)
 	})
 }

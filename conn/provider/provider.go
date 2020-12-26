@@ -1,38 +1,39 @@
 package provider
 
 import (
-	log "github.com/sirupsen/logrus"
 	"sync"
 	"sync/atomic"
+
+	log "github.com/sirupsen/logrus"
 
 	cpb "github.com/SailGame/Core/pb/core"
 )
 
 type Handler interface {
 	HandleRegisterArgs(*Conn, *cpb.ProviderMsg, *cpb.RegisterArgs) error
-	HandleNotifyMsg(*Conn, *cpb.ProviderMsg, *cpb.NotifyMsg) error
+	HandleNotifyMsg(*Conn, *cpb.ProviderMsg, *cpb.NotifyMsgArgs) error
 
 	Disconnect(*Conn)
 }
 
 type Conn struct {
 	// bind to an entity
-	ID         interface{}
+	ID interface{}
 	// used in logging
-	PrintID    string
+	PrintID string
 
 	mRecvLoopWg sync.WaitGroup
 	mRunning    atomic.Value
 	mServer     cpb.GameCore_ProviderServer
 	mHandler    Handler
-	mMutex		sync.Locker
+	mMutex      sync.Locker
 }
 
 func NewConn(pServer cpb.GameCore_ProviderServer, handler Handler) *Conn {
 	conn := &Conn{
-		mServer: pServer,
+		mServer:  pServer,
 		mHandler: handler,
-		mMutex: &sync.Mutex{},
+		mMutex:   &sync.Mutex{},
 	}
 	conn.mRunning.Store(false)
 	return conn
@@ -48,12 +49,12 @@ func (conn *Conn) RecvLoop() {
 			return
 		}
 		log.Debugf("Provider connection (%s) recv msg (%s)", conn.PrintID, msg.String())
-	
-		if submsg := msg.GetRegisterArgs(); submsg != nil{
+
+		if submsg := msg.GetRegisterArgs(); submsg != nil {
 			conn.mHandler.HandleRegisterArgs(conn, msg, submsg)
-		}else if submsg := msg.GetNotifyMsg(); submsg != nil{
+		} else if submsg := msg.GetNotifyMsgArgs(); submsg != nil {
 			conn.mHandler.HandleNotifyMsg(conn, msg, submsg)
-		}else{
+		} else {
 			log.Warnf("Received unwanted msg (%s) from provider %s", msg.String(), conn.PrintID)
 			conn.mHandler.Disconnect(conn)
 			conn.mRunning.Store(false)

@@ -15,23 +15,23 @@ import (
 )
 
 func TestGameStart(t *testing.T) {
-    Convey("Game Start", t, func() {
-        f := newFixture()
-        f.init(&server.CoreServerConfig{
-            MStorage: memory.NewStorage(),
-        })
+	Convey("Game Start", t, func() {
+		f := newFixture()
+		f.init(&server.CoreServerConfig{
+			MStorage: memory.NewStorage(),
+		})
 		gameName := "testGame"
 
 		uc, _, token, roomId := buildOneUserAndOneRoom(f)
 		uc.listenToCore(token)
 
 		controlRoomRet, err := uc.mCoreClient.ControlRoom(context.TODO(), &cpb.ControlRoomArgs{
-			Token: token,
-			RoomId: roomId,
+			Token:    token,
+			RoomId:   roomId,
 			GameName: gameName,
 		})
 		So(err, assertions.ShouldBeNil)
-		So(controlRoomRet.Errno, assertions.ShouldEqual, cpb.ErrorNumber_ControlRoom_RequiredProviderNotExist)
+		So(controlRoomRet.Err, assertions.ShouldEqual, cpb.ErrorNumber_ControlRoom_RequiredProviderNotExist)
 
 		pcId := "testProvider"
 		pc := f.newProviderClient()
@@ -40,7 +40,7 @@ func TestGameStart(t *testing.T) {
 		err = pc.mProviderClient.Send(&cpb.ProviderMsg{
 			Msg: &cpb.ProviderMsg_RegisterArgs{
 				&cpb.RegisterArgs{
-					Id: pcId,
+					Id:       pcId,
 					GameName: gameName,
 				},
 			},
@@ -50,13 +50,13 @@ func TestGameStart(t *testing.T) {
 		time.Sleep(500 * time.Millisecond)
 
 		controlRoomRet, err = uc.mCoreClient.ControlRoom(context.TODO(), &cpb.ControlRoomArgs{
-			Token: token,
-			RoomId: roomId,
+			Token:    token,
+			RoomId:   roomId,
 			GameName: gameName,
 		})
 
 		So(err, assertions.ShouldBeNil)
-		So(controlRoomRet.Errno, assertions.ShouldEqual, cpb.ErrorNumber_OK)
+		So(controlRoomRet.Err, assertions.ShouldEqual, cpb.ErrorNumber_OK)
 
 		uc.mCoreClient.OperationInRoom(context.TODO(), &cpb.OperationInRoomArgs{
 			Token: token,
@@ -85,8 +85,8 @@ func TestGameStart(t *testing.T) {
 
 			t.Logf("TestProvider send start to TestUser")
 			err = pc.mProviderClient.Send(&cpb.ProviderMsg{
-				Msg: &cpb.ProviderMsg_NotifyMsg{
-					&cpb.NotifyMsg{
+				Msg: &cpb.ProviderMsg_NotifyMsgArgs{
+					&cpb.NotifyMsgArgs{
 						RoomId: msg.GetStartGameArgs().GetRoomId(),
 						UserId: 0, // broadcast
 						Custom: nil,

@@ -3,6 +3,7 @@ package server
 import (
 	"errors"
 	"fmt"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/SailGame/Core/conn/client"
@@ -30,7 +31,7 @@ func (coreServer *CoreServer) HandleRegisterArgs(conn *provider.Conn, providerMs
 	return nil
 }
 
-func (coreServer *CoreServer) HandleNotifyMsg(conn *provider.Conn, providerMsg *cpb.ProviderMsg, notifyMsg *cpb.NotifyMsg) error {
+func (coreServer *CoreServer) HandleNotifyMsg(conn *provider.Conn, providerMsg *cpb.ProviderMsg, notifyMsg *cpb.NotifyMsgArgs) error {
 	if conn.ID == nil {
 		// not registered, ignore and disconnect
 		return errors.New("Provider hasn't registered but sent other msgs")
@@ -38,7 +39,7 @@ func (coreServer *CoreServer) HandleNotifyMsg(conn *provider.Conn, providerMsg *
 	p := conn.ID.(d.Provider)
 	room := p.GetRoom(notifyMsg.RoomId)
 	if room == nil {
-		return errors.New(fmt.Sprintf("NotifyMsg: Unknown RoomId: (%d) conn: (%s)", notifyMsg.RoomId, conn.PrintID))
+		return errors.New(fmt.Sprintf("NotifyMsgArgs: Unknown RoomId: (%d) conn: (%s)", notifyMsg.RoomId, conn.PrintID))
 	}
 
 	broadcastMsg := &cpb.BroadcastMsg{
@@ -51,14 +52,14 @@ func (coreServer *CoreServer) HandleNotifyMsg(conn *provider.Conn, providerMsg *
 	for _, user := range room.GetUsers() {
 		conn, err := user.GetConn()
 		if err != nil {
-			return errors.New(fmt.Sprintf("NotifyMsg: User (%s) disconnected", user.GetUserName()))
+			return errors.New(fmt.Sprintf("NotifyMsgArgs: User (%s) disconnected", user.GetUserName()))
 		}
 		clientConn := conn.(*client.Conn)
 		if (notifyMsg.UserId == 0) || (notifyMsg.UserId > 0 && uint32(notifyMsg.UserId) == user.GetTemporaryID()) || (uint32(-notifyMsg.UserId) != user.GetTemporaryID()) {
 			err = clientConn.Send(broadcastMsg)
 			if err != nil {
 				user.SetConn(nil)
-				return errors.New(fmt.Sprintf("NotifyMsg: User (%s) disconnected", user.GetUserName()))
+				return errors.New(fmt.Sprintf("NotifyMsgArgs: User (%s) disconnected", user.GetUserName()))
 			}
 		}
 	}
