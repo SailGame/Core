@@ -34,7 +34,7 @@ func main() {
 	s := grpc.NewServer()
 	coreServer, err := server.NewCoreServer(&server.CoreServerConfig{})
 	if err != nil {
-		panic(err)
+		log.Fatalf("failed to create core server: %v", err)
 	}
 	cpb.RegisterGameCoreServer(s, coreServer)
 	reflection.Register(s)

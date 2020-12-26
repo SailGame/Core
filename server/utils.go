@@ -1,7 +1,7 @@
 package server
 
 import (
-	"fmt"
+	"log"
 
 	d "github.com/SailGame/Core/data"
 	cpb "github.com/SailGame/Core/pb/core"
@@ -38,7 +38,8 @@ func toBool(ready cpb.Ready) (bool){
 	if(ready == cpb.Ready_CANCEL){
 		return false
 	}
-	panic(fmt.Sprintf("Can't convert cpb.Ready %d", ready))
+	log.Fatalf("Can't convert cpb.Ready %d", ready)
+	return false
 }
 
 func toUserTempID(users []d.User) ([]uint32){
