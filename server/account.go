@@ -2,12 +2,14 @@ package server
 
 import (
 	"context"
+	log "github.com/sirupsen/logrus"
 
 	cpb "github.com/SailGame/Core/pb/core"
 )
 
 func (coreServer *CoreServer) Login(ctx context.Context, req *cpb.LoginArgs) (*cpb.LoginRet, error) {
 	// TODO: User register
+	log.Infof("Login: %v", req)
 	err := coreServer.mStorage.CreateUser(req.UserName, req.Password)
 	if err != nil {
 		return &cpb.LoginRet{Err: cpb.ErrorNumber_User_FailToCreateUser}, nil

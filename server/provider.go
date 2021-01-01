@@ -36,6 +36,7 @@ func (coreServer *CoreServer) HandleNotifyMsg(conn *provider.Conn, providerMsg *
 		// not registered, ignore and disconnect
 		return errors.New("Provider hasn't registered but sent other msgs")
 	}
+
 	p := conn.ID.(d.Provider)
 	room := p.GetRoom(notifyMsg.RoomId)
 	if room == nil {
