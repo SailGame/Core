@@ -1,4 +1,4 @@
-.PHONY: core test proto image clean
+.PHONY: core test proto image clean fmt
 
 core:
 	go build -o build/core
@@ -15,3 +15,6 @@ image:
 
 clean:
 	rm -rf build/* pb/
+
+fmt:
+	go fmt github.com/SailGame/Core

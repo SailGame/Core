@@ -8,7 +8,6 @@ jobs:
   release:
     name: Release cmd/protoc-gen-go-grpc
     runs-on: ubuntu-20.04
-    if: startsWith(github.event.release.tag_name, 'cmd/protoc-gen-go-grpc/')
     strategy:
       matrix:
         goos: [linux, darwin, windows]
@@ -16,7 +15,6 @@ jobs:
         exclude:
           - goos: darwin
             goarch: 386
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v1
@@ -55,12 +53,3 @@ jobs:
           asset_path: ./${{ steps.package.outputs.name }}
           asset_name: ${{ steps.package.outputs.name }}
           asset_content_type: application/gzip
-      - name: Push to GitHub Packages
-        if: ${{ matrix.goos == 'linux'}}
-        uses: docker/build-push-action@v1
-        with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          registry: docker.pkg.github.com
-          repository: sailgame/core/core
-          tag_with_ref: true

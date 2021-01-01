@@ -23,10 +23,13 @@ type systemFixture struct {
 type userClient struct {
 	mCoreClient cpb.GameCoreClient
 	mLisClient cpb.GameCore_ListenClient
+	mClose context.CancelFunc
 }
 
 func (uc *userClient) listenToCore(token string) (err error) {
-	uc.mLisClient, err = uc.mCoreClient.Listen(context.Background(), &cpb.ListenArgs{
+	ctx, cancel := context.WithCancel(context.Background())
+	uc.mClose = cancel
+	uc.mLisClient, err = uc.mCoreClient.Listen(ctx, &cpb.ListenArgs{
 		Token: token,
 	})
 	return

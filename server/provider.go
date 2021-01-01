@@ -36,6 +36,7 @@ func (coreServer *CoreServer) HandleNotifyMsg(conn *provider.Conn, providerMsg *
 		// not registered, ignore and disconnect
 		return errors.New("Provider hasn't registered but sent other msgs")
 	}
+
 	p := conn.ID.(d.Provider)
 	room := p.GetRoom(notifyMsg.RoomId)
 	if room == nil {
@@ -52,14 +53,16 @@ func (coreServer *CoreServer) HandleNotifyMsg(conn *provider.Conn, providerMsg *
 	for _, user := range room.GetUsers() {
 		conn, err := user.GetConn()
 		if err != nil {
-			return errors.New(fmt.Sprintf("NotifyMsgArgs: User (%s) disconnected", user.GetUserName()))
+			log.Warnf("User(%s) error: %v", user.GetUserName(), err)
+			return nil
 		}
 		clientConn := conn.(*client.Conn)
 		if (notifyMsg.UserId == 0) || (notifyMsg.UserId > 0 && uint32(notifyMsg.UserId) == user.GetTemporaryID()) || (uint32(-notifyMsg.UserId) != user.GetTemporaryID()) {
 			err = clientConn.Send(broadcastMsg)
 			if err != nil {
 				user.SetConn(nil)
-				return errors.New(fmt.Sprintf("NotifyMsgArgs: User (%s) disconnected", user.GetUserName()))
+				log.Warnf("Client(%s) Disconnect", user.GetUserName())
+				return nil
 			}
 		}
 	}
