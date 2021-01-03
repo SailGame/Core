@@ -22,6 +22,47 @@ func toGrpcRoom(room d.Room) (*cpb.Room){
 	}
 }
 
+func toGrpcRoomDetails(room d.Room) (*cpb.RoomDetails, error){
+	grpcRoomUsers, err := toGrpcRoomUsers(room)
+	if err != nil{
+		return nil, err
+	}
+	return &cpb.RoomDetails{
+		GameName: room.GetGameName(),
+		RoomId: room.GetRoomID(),
+		User: grpcRoomUsers,
+	}, nil
+}
+
+func toGrpcRoomUsers(room d.Room) ([]*cpb.RoomUser, error){
+	users := room.GetUsers()
+	ret := make([]*cpb.RoomUser, 0, len(users))
+	for _, user := range users {
+		state, err := room.GetUserState(user)
+		if err != nil {
+			return nil, err
+		}
+		ret = append(ret, &cpb.RoomUser{
+			UserName: user.GetUserName(),
+			UserState: toGrpcRoomUserState(state),
+		})
+	}
+	return ret, nil
+}
+
+func toGrpcRoomUserState(state d.UserState) (cpb.RoomUser_RoomUserState){
+	if state == d.UserState_PREPARING{
+		return cpb.RoomUser_PREPARING
+	}else if state == d.UserState_READY{
+		return cpb.RoomUser_READY
+	}else if state == d.UserState_PLAYING{
+		return cpb.RoomUser_PLAYING
+	}else if state == d.UserState_EXITED{
+		return cpb.RoomUser_DISCONNECTED
+	}
+	return cpb.RoomUser_ERROR
+}
+
 func toUserName(users []d.User) ([]string){
 	ret := make([]string, 0, len(users))
 	for _, v := range users {

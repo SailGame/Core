@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 
+	"github.com/SailGame/Core/conn/client"
 	"github.com/SailGame/Core/conn/provider"
 	d "github.com/SailGame/Core/data"
 	cpb "github.com/SailGame/Core/pb/core"
@@ -21,6 +22,8 @@ func (coreServer *CoreServer) ControlRoom(ctx context.Context, req *cpb.ControlR
 	if err != nil {
 		return &cpb.ControlRoomRet{Err: cpb.ErrorNumber_ControlRoom_RoomNotExist}, nil
 	}
+	room.Lock()
+	defer room.Unlock()
 	if req.GameName != "" {
 		providers := coreServer.mStorage.FindProviderByGame(req.GameName)
 		if len(providers) == 0 {
@@ -30,6 +33,7 @@ func (coreServer *CoreServer) ControlRoom(ctx context.Context, req *cpb.ControlR
 		room.SetProvider(providers[0])
 	}
 
+	coreServer.NotifyRoomDetails(ctx, room)
 	// TODO: passwd
 	return &cpb.ControlRoomRet{Err: cpb.ErrorNumber_OK}, nil
 }
@@ -47,18 +51,19 @@ func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArg
 		return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_JoinRoom_InvalidToken}, nil
 	}
 	user := token.GetUser()
+	user.Lock()
+	defer user.Unlock()
 	room, err := coreServer.mStorage.FindRoom(req.RoomId)
 	if err != nil {
 		return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_JoinRoom_InvalidRoomID}, nil
 	}
+	room.Lock()
+	defer room.Unlock()
 	curRoom, err := user.GetRoom()
 	if curRoom == room {
 		return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_OK}, nil
 	} else if curRoom != nil {
-		err := curRoom.UserExit(user)
-		if err != nil {
-			return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_JoinRoom_UserIsInAnotherRoomAndFailToExit}, nil
-		}
+		return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_JoinRoom_UserIsInAnotherRoom}, nil
 	}
 	err = room.UserJoin(user)
 	if err != nil {
@@ -68,6 +73,8 @@ func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArg
 	if err != nil {
 		return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_UnkownError}, nil
 	}
+	coreServer.NotifyRoomDetails(ctx, room)
+
 	return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_OK}, nil
 }
 
@@ -77,10 +84,14 @@ func (coreServer *CoreServer) ExitRoom(ctx context.Context, req *cpb.ExitRoomArg
 		return &cpb.ExitRoomRet{Err: cpb.ErrorNumber_ExitRoom_InvalidToken}, nil
 	}
 	user := token.GetUser()
+	user.Lock()
+	defer user.Unlock()
 	room, err := user.GetRoom()
 	if err != nil {
 		return &cpb.ExitRoomRet{Err: cpb.ErrorNumber_ExitRoom_NotInRoom}, nil
 	}
+	room.Lock()
+	defer room.Unlock()
 	err = room.UserExit(user)
 	if err != nil {
 		return &cpb.ExitRoomRet{Err: cpb.ErrorNumber_UnkownError}, nil
@@ -89,6 +100,8 @@ func (coreServer *CoreServer) ExitRoom(ctx context.Context, req *cpb.ExitRoomArg
 	if err != nil {
 		return &cpb.ExitRoomRet{Err: cpb.ErrorNumber_UnkownError}, nil
 	}
+	coreServer.NotifyRoomDetails(ctx, room)
+
 	return &cpb.ExitRoomRet{Err: cpb.ErrorNumber_OK}, nil
 }
 
@@ -97,7 +110,13 @@ func (coreServer *CoreServer) QueryRoom(ctx context.Context, req *cpb.QueryRoomA
 	if err != nil {
 		return &cpb.QueryRoomRet{Err: cpb.ErrorNumber_QryRoom_InvalidRoomID}, nil
 	}
-	return &cpb.QueryRoomRet{Err: cpb.ErrorNumber_OK, Room: toGrpcRoom(room)}, nil
+	room.Lock()
+	defer room.Unlock()
+	roomDetails, err := toGrpcRoomDetails(room)
+	if err != nil {
+		return &cpb.QueryRoomRet{Err: cpb.ErrorNumber_UnkownError}, nil
+	}
+	return &cpb.QueryRoomRet{Err: cpb.ErrorNumber_OK, Room: roomDetails}, nil
 }
 
 func (coreServer *CoreServer) OperationInRoom(ctx context.Context, req *cpb.OperationInRoomArgs) (*cpb.OperationInRoomRet, error) {
@@ -105,10 +124,14 @@ func (coreServer *CoreServer) OperationInRoom(ctx context.Context, req *cpb.Oper
 	if err != nil {
 		return &cpb.OperationInRoomRet{Err: cpb.ErrorNumber_OperRoom_InvalidToken}, nil
 	}
+	token.GetUser().Lock()
+	defer token.GetUser().Unlock()
 	room, err := token.GetUser().GetRoom()
 	if err != nil {
 		return &cpb.OperationInRoomRet{Err: cpb.ErrorNumber_OperRoom_NotInRoom}, nil
 	}
+	room.Lock()
+	defer room.Unlock()
 	pv := room.GetProvider()
 	if pv == nil {
 		return &cpb.OperationInRoomRet{Err: cpb.ErrorNumber_OperRoom_ProviderUnavailable}, nil
@@ -125,7 +148,8 @@ func (coreServer *CoreServer) OperationInRoom(ctx context.Context, req *cpb.Oper
 			// room is in playing or ??
 			return &cpb.OperationInRoomRet{Err: cpb.ErrorNumber_OperRoom_CannotChangeReadyState}, nil
 		}
-		if room.GetState() == d.Playing {
+		coreServer.NotifyRoomDetails(ctx, room)
+		if room.GetState() == d.RoomState_PLAYING {
 			pConn.Send(&cpb.ProviderMsg{
 				Msg: &cpb.ProviderMsg_StartGameArgs{
 					&cpb.StartGameArgs{
@@ -151,4 +175,27 @@ func (coreServer *CoreServer) OperationInRoom(ctx context.Context, req *cpb.Oper
 	}
 
 	return &cpb.OperationInRoomRet{Err: cpb.ErrorNumber_OK}, nil
+}
+
+func (coreServer *CoreServer) NotifyRoomDetails(ctx context.Context, room d.Room) error {
+	roomDetails, err := toGrpcRoomDetails(room)
+	if err != nil {
+		return err
+	}
+	for _, v := range room.GetUsers() {
+		conn, err := v.GetConn()
+		if err != nil {
+			return err
+		}
+		clientConn := conn.(*client.Conn)
+		err = clientConn.Send(&cpb.BroadcastMsg{
+			Msg: &cpb.BroadcastMsg_RoomDetails{
+				RoomDetails: roomDetails,
+			},
+		})
+		if err != nil {
+			return nil
+		}
+	}
+	return nil
 }

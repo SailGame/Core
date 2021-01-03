@@ -69,6 +69,12 @@ func TestGameStart(t *testing.T) {
 		var wg sync.WaitGroup
 		wg.Add(2)
 		go Convey("uc recv", t, func() {
+			JoinMsg, err := uc.mLisClient.Recv()
+			So(err, assertions.ShouldBeNil)
+			So(JoinMsg.GetRoomDetails(), assertions.ShouldNotBeNil)
+			ReadyMsg, err := uc.mLisClient.Recv()
+			So(err, assertions.ShouldBeNil)
+			So(ReadyMsg.GetRoomDetails(), assertions.ShouldNotBeNil)
 			msg, err := uc.mLisClient.Recv()
 
 			t.Logf("TestUser receive start game")

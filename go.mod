@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/go-basic/uuid v1.0.0
+	github.com/golang/mock v1.4.4 // indirect
 	github.com/golang/protobuf v1.4.3
 	github.com/sirupsen/logrus v1.7.0
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d
