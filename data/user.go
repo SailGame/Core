@@ -1,6 +1,9 @@
 package data
 
 type User interface {
+	// concurrency control
+	Lock()
+	Unlock()
 	// user info
 	GetUserName() (string)
 	GetDisplayName() (string)

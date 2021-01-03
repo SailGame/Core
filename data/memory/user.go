@@ -2,11 +2,13 @@ package memory
 
 import (
 	"errors"
+	"sync"
 
 	d "github.com/SailGame/Core/data"
 )
 
 type User struct {
+	mMutex sync.Locker
 	mUserName string
 	mPasswd string
 	mDisplayName string
@@ -17,10 +19,20 @@ type User struct {
 }
 
 func NewUser(userName string, passwd string) (*User){
-	u := User{}
-	u.mUserName = userName
-	u.mPasswd = passwd
-	return &u
+	u := &User{
+		mUserName: userName,
+		mPasswd: passwd,
+		mMutex: &sync.Mutex{},
+	}
+	return u
+}
+
+func (u *User) Lock() {
+	u.mMutex.Lock()
+}
+
+func (u *User) Unlock() {
+	u.mMutex.Unlock()
 }
 
 func (u *User) GetUserName() (string){
