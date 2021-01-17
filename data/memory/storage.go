@@ -78,6 +78,13 @@ func (s *Storage) DelRoom(roomID int32) (error){
 	return nil
 }
 
+func (s *Storage) IsUserExist(userName string) bool{
+	s.mMutex.Lock()
+	defer s.mMutex.Unlock()
+	_, ok := s.mUsers[userName]
+	return ok
+}
+
 func (s *Storage) CreateUser(userName string, passwd string) (error){
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()

@@ -1,3 +1,5 @@
+## 1.1.1
+- [bugfix] login repeatedly
 ## 1.1.0
 - Fix room state broadcast (proto 1.0.0)
   - Send room details to users in the room when

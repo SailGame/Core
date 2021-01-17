@@ -9,6 +9,7 @@ type Storage interface {
 	FindRoom(roomID int32) (Room, error)
 	DelRoom(roomID int32) (error)
 
+	IsUserExist(userName string) bool
 	CreateUser(userName string, passwd string) (error)
 	GetUsers() ([]User)
 	FindUser(userName string, passwd string) (User, error)
