@@ -10,10 +10,13 @@ import (
 func (coreServer *CoreServer) Login(ctx context.Context, req *cpb.LoginArgs) (*cpb.LoginRet, error) {
 	// TODO: User register
 	log.Infof("Login: %v", req)
-	err := coreServer.mStorage.CreateUser(req.UserName, req.Password)
-	if err != nil {
-		return &cpb.LoginRet{Err: cpb.ErrorNumber_User_FailToCreateUser}, nil
+	if !coreServer.mStorage.IsUserExist(req.UserName){
+		err := coreServer.mStorage.CreateUser(req.UserName, req.Password)
+		if err != nil {
+			return &cpb.LoginRet{Err: cpb.ErrorNumber_User_FailToCreateUser}, nil
+		}
 	}
+
 	user, err := coreServer.mStorage.FindUser(req.UserName, req.Password)
 	if err != nil {
 		return &cpb.LoginRet{Err: cpb.ErrorNumber_User_FailToFindUser}, nil
