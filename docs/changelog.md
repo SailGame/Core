@@ -1,3 +1,8 @@
+## 1.2.0
+- Support QueryAccount
+- Support GameSetting field in ControlRoom
+- Add more log in room request handler
+
 ## 1.1.1
 - [bugfix] login repeatedly
 ## 1.1.0
