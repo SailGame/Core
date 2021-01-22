@@ -31,6 +31,7 @@ func toGrpcRoomDetails(room d.Room) (*cpb.RoomDetails, error){
 		GameName: room.GetGameName(),
 		RoomId: room.GetRoomID(),
 		User: grpcRoomUsers,
+		GameSetting: room.GetGameSetting(),
 	}, nil
 }
 

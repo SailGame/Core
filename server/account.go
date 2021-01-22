@@ -29,6 +29,39 @@ func (coreServer *CoreServer) Login(ctx context.Context, req *cpb.LoginArgs) (*c
 	return &cpb.LoginRet{Token: token.GetKey(), Account: &cpb.Account{UserName: user.GetUserName(), Points: 0}}, nil
 }
 
-// func (coreServer *CoreServer) QueryAccount(ctx context.Context, req *cpb.QueryAccountArgs) (*cpb.QueryAccountRet, error) {
-// 	return nil, nil
-// }
+func (coreServer *CoreServer) QueryAccount(ctx context.Context, req *cpb.QueryAccountArgs) (*cpb.QueryAccountRet, error) {
+	if req.GetUserName() != "" {
+		if !coreServer.mStorage.IsUserExist(req.GetUserName()){
+			return &cpb.QueryAccountRet{Err: cpb.ErrorNumber_QueryAccount_InvalidUserNameOrToken}, nil
+		}
+		return &cpb.QueryAccountRet{
+			Err: cpb.ErrorNumber_OK,
+			Account: &cpb.Account{
+				UserName: "",
+				Points: 0,
+			},
+		}, nil
+	}else if req.GetToken() != "" {
+		token, err := coreServer.mStorage.FindToken(req.GetToken())
+		if err != nil {
+			return &cpb.QueryAccountRet{Err: cpb.ErrorNumber_QueryAccount_InvalidUserNameOrToken}, nil
+		}
+		user := token.GetUser()
+		user.Lock()
+		defer user.Unlock()
+		room, err := user.GetRoom()
+		var roomID int32 = -1
+		if err == nil {
+			roomID = room.GetRoomID()
+		}
+		return &cpb.QueryAccountRet{
+			Err: cpb.ErrorNumber_OK,
+			Account: &cpb.Account{
+				UserName: user.GetUserName(),
+				Points: 0, }, 
+				RoomId: roomID,
+		}, nil
+	}else {
+		return &cpb.QueryAccountRet{Err: cpb.ErrorNumber_QueryAccount_InvalidUserNameOrToken}, nil
+	}
+}

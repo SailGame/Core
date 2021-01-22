@@ -1,5 +1,7 @@
 package data
 
+import "google.golang.org/protobuf/types/known/anypb"
+
 type RoomState int32
 
 const (
@@ -29,6 +31,8 @@ type Room interface {
 	GetProvider() (Provider)
 	GetState() (RoomState)
 	GetUserState(User) (UserState, error)
+	GetGameSetting() (*anypb.Any)
+	SetGameSetting(*anypb.Any)
 
 	UserJoin(User) (error)
 	UserReady(User, bool) (error)

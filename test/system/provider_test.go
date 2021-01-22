@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
 	"github.com/smartystreets/assertions"
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -25,11 +26,20 @@ func TestGameStart(t *testing.T) {
 		uc, _, token, roomId := buildOneUserAndOneRoom(f)
 		uc.listenToCore(token)
 
+		gameSetting, err := ptypes.MarshalAny(&cpb.Account{
+			UserName: "GameSetting",
+			Points: 99,
+		})
+
+		So(err, assertions.ShouldBeNil)
+
 		controlRoomRet, err := uc.mCoreClient.ControlRoom(context.TODO(), &cpb.ControlRoomArgs{
 			Token:    token,
 			RoomId:   roomId,
 			GameName: gameName,
+			Custom:   gameSetting,
 		})
+
 		So(err, assertions.ShouldBeNil)
 		So(controlRoomRet.Err, assertions.ShouldEqual, cpb.ErrorNumber_ControlRoom_RequiredProviderNotExist)
 
@@ -53,10 +63,27 @@ func TestGameStart(t *testing.T) {
 			Token:    token,
 			RoomId:   roomId,
 			GameName: gameName,
+			Custom:   gameSetting,
 		})
 
 		So(err, assertions.ShouldBeNil)
 		So(controlRoomRet.Err, assertions.ShouldEqual, cpb.ErrorNumber_OK)
+
+		qryRoomRet, err := uc.mCoreClient.QueryRoom(context.TODO(), &cpb.QueryRoomArgs{
+			Token: token,
+			RoomId: roomId,
+		})
+
+		So(err, assertions.ShouldBeNil)
+		So(qryRoomRet.Err, assertions.ShouldEqual, cpb.ErrorNumber_OK)
+		So(qryRoomRet.Room.RoomId, assertions.ShouldEqual, roomId)
+		So(qryRoomRet.Room.GameName, assertions.ShouldEqual, gameName)
+
+		unMarshalGameSetting := &cpb.Account{}
+		err = ptypes.UnmarshalAny(qryRoomRet.GetRoom().GetGameSetting(), unMarshalGameSetting)
+		So(err, assertions.ShouldBeNil)
+		So(unMarshalGameSetting.UserName, assertions.ShouldEqual, "GameSetting")
+		So(unMarshalGameSetting.Points, assertions.ShouldEqual, 99)
 
 		uc.mCoreClient.OperationInRoom(context.TODO(), &cpb.OperationInRoomArgs{
 			Token: token,
