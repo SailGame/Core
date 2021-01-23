@@ -7,15 +7,13 @@ import (
 
 // CoreServer is derived from Grpc GameCoreServer Interface
 // the required methods are implemented in separated files like room.go, account.go
-type CoreServer struct
-{
+type CoreServer struct {
 	cpb.UnimplementedGameCoreServer
 	mStorage d.Storage
 }
 
 // CoreServerConfig contains necessary parameters when building core server
-type CoreServerConfig struct
-{
+type CoreServerConfig struct {
 	MStorage d.Storage
 }
 

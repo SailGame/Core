@@ -24,8 +24,8 @@ func TestClientDisconnect(t *testing.T) {
 		uc.listenToCore(token)
 
 		controlRoomRet, err := uc.mCoreClient.JoinRoom(context.TODO(), &cpb.JoinRoomArgs{
-			Token:    token,
-			RoomId:   roomId,
+			Token:  token,
+			RoomId: roomId,
 		})
 		So(err, assertions.ShouldBeNil)
 		So(controlRoomRet.Err, assertions.ShouldEqual, cpb.ErrorNumber_OK)

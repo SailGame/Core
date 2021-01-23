@@ -7,23 +7,23 @@ import (
 	cpb "github.com/SailGame/Core/pb/core"
 )
 
-type Conn struct{
-	mServer cpb.GameCore_ListenServer
-	mWg sync.WaitGroup
+type Conn struct {
+	mServer  cpb.GameCore_ListenServer
+	mWg      sync.WaitGroup
 	mRunning atomic.Value
-	mMutex sync.Locker
+	mMutex   sync.Locker
 }
 
-func NewConn(server cpb.GameCore_ListenServer) (*Conn) {
+func NewConn(server cpb.GameCore_ListenServer) *Conn {
 	conn := &Conn{
 		mServer: server,
-		mMutex: &sync.Mutex{},
+		mMutex:  &sync.Mutex{},
 	}
 	conn.mRunning.Store(false)
 	return conn
 }
 
-func (conn *Conn) Send(msg *cpb.BroadcastMsg) (error) {
+func (conn *Conn) Send(msg *cpb.BroadcastMsg) error {
 	conn.mMutex.Lock()
 	err := conn.mServer.Send(msg)
 	conn.mMutex.Unlock()
@@ -31,7 +31,7 @@ func (conn *Conn) Send(msg *cpb.BroadcastMsg) (error) {
 }
 
 func (conn *Conn) Start() {
-	if(!conn.mRunning.Load().(bool)){
+	if !conn.mRunning.Load().(bool) {
 		// return err?
 		conn.mWg.Add(1)
 	}
@@ -40,7 +40,7 @@ func (conn *Conn) Start() {
 }
 
 func (conn *Conn) Close() {
-	if(!conn.mRunning.Load().(bool)){
+	if !conn.mRunning.Load().(bool) {
 		return
 	}
 	conn.mRunning.Store(false)

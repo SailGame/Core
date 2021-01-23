@@ -28,7 +28,7 @@ func TestGameStart(t *testing.T) {
 
 		gameSetting, err := ptypes.MarshalAny(&cpb.Account{
 			UserName: "GameSetting",
-			Points: 99,
+			Points:   99,
 		})
 
 		So(err, assertions.ShouldBeNil)
@@ -70,7 +70,7 @@ func TestGameStart(t *testing.T) {
 		So(controlRoomRet.Err, assertions.ShouldEqual, cpb.ErrorNumber_OK)
 
 		qryRoomRet, err := uc.mCoreClient.QueryRoom(context.TODO(), &cpb.QueryRoomArgs{
-			Token: token,
+			Token:  token,
 			RoomId: roomId,
 		})
 

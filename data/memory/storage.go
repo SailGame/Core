@@ -11,15 +11,15 @@ import (
 )
 
 type Storage struct {
-	mRooms map[int32]*Room
-	mUsers map[string]*User
-	mTokens map[string]*Token
-	mProviders map[string]d.Provider
-	mMutex sync.Locker
+	mRooms      map[int32]*Room
+	mUsers      map[string]*User
+	mTokens     map[string]*Token
+	mProviders  map[string]d.Provider
+	mMutex      sync.Locker
 	mIdentityID int32
 }
 
-func NewStorage() (*Storage){
+func NewStorage() *Storage {
 	storage := Storage{}
 	storage.mRooms = make(map[int32]*Room)
 	storage.mUsers = make(map[string]*User)
@@ -30,7 +30,7 @@ func NewStorage() (*Storage){
 	return &storage
 }
 
-func (s *Storage) CreateRoom() (d.Room, error){
+func (s *Storage) CreateRoom() (d.Room, error) {
 	roomID := atomic.AddInt32(&s.mIdentityID, 1)
 	newRoom := NewRoom(roomID)
 	s.mMutex.Lock()
@@ -39,11 +39,11 @@ func (s *Storage) CreateRoom() (d.Room, error){
 	return newRoom, nil
 }
 
-func (s *Storage) GetRooms() ([]d.Room){
-	return s.GetRoomsWithFilter(func(d.Room) bool {return true})
+func (s *Storage) GetRooms() []d.Room {
+	return s.GetRoomsWithFilter(func(d.Room) bool { return true })
 }
 
-func (s *Storage) GetRoomsWithFilter(is func(d.Room) bool) ([]d.Room) {
+func (s *Storage) GetRoomsWithFilter(is func(d.Room) bool) []d.Room {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	ret := make([]d.Room, 0, len(s.mRooms))
@@ -55,48 +55,48 @@ func (s *Storage) GetRoomsWithFilter(is func(d.Room) bool) ([]d.Room) {
 	return ret
 }
 
-func (s *Storage) FindRoom(roomID int32) (d.Room, error){
+func (s *Storage) FindRoom(roomID int32) (d.Room, error) {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	room, ok := s.mRooms[roomID]
-	if(ok){
+	if ok {
 		return room, nil
-	} else{
+	} else {
 		log.Warnf("Room (%d) not exist", roomID)
-		return nil, errors.New("Room not exist");
+		return nil, errors.New("Room not exist")
 	}
 }
 
-func (s *Storage) DelRoom(roomID int32) (error){
+func (s *Storage) DelRoom(roomID int32) error {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	_, ok := s.mRooms[roomID]
-	if(!ok){
+	if !ok {
 		return errors.New("No such room")
 	}
 	delete(s.mRooms, roomID)
 	return nil
 }
 
-func (s *Storage) IsUserExist(userName string) bool{
+func (s *Storage) IsUserExist(userName string) bool {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	_, ok := s.mUsers[userName]
 	return ok
 }
 
-func (s *Storage) CreateUser(userName string, passwd string) (error){
+func (s *Storage) CreateUser(userName string, passwd string) error {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	_, ok := s.mUsers[userName]
-	if(ok){
+	if ok {
 		return errors.New("UserName is occupied:" + userName)
 	}
 	s.mUsers[userName] = NewUser(userName, passwd)
 	return nil
 }
 
-func (s *Storage) GetUsers() ([]d.User){
+func (s *Storage) GetUsers() []d.User {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	ret := make([]d.User, 0, len(s.mUsers))
@@ -106,7 +106,7 @@ func (s *Storage) GetUsers() ([]d.User){
 	return ret
 }
 
-func (s *Storage) FindUser(userName string, passwd string) (d.User, error){
+func (s *Storage) FindUser(userName string, passwd string) (d.User, error) {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	user, ok := s.mUsers[userName]
@@ -116,7 +116,7 @@ func (s *Storage) FindUser(userName string, passwd string) (d.User, error){
 	return user, nil
 }
 
-func (s *Storage) DelUser(userName string) (error){
+func (s *Storage) DelUser(userName string) error {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	// TODO: is user playing?
@@ -124,7 +124,7 @@ func (s *Storage) DelUser(userName string) (error){
 	return nil
 }
 
-func (s *Storage) CreateToken(user d.User) (d.Token, error){
+func (s *Storage) CreateToken(user d.User) (d.Token, error) {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	for k, token := range s.mTokens {
@@ -138,7 +138,7 @@ func (s *Storage) CreateToken(user d.User) (d.Token, error){
 	return newToken, nil
 }
 
-func (s *Storage) FindToken(key string) (d.Token, error){
+func (s *Storage) FindToken(key string) (d.Token, error) {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	token, ok := s.mTokens[key]
@@ -148,21 +148,21 @@ func (s *Storage) FindToken(key string) (d.Token, error){
 	return token, nil
 }
 
-func (s *Storage) DelToken(key string) (error){
+func (s *Storage) DelToken(key string) error {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	delete(s.mTokens, key)
 	return nil
 }
 
-func (s *Storage) RegisterProvider(provider d.Provider) (error){
+func (s *Storage) RegisterProvider(provider d.Provider) error {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	s.mProviders[provider.GetID()] = provider
 	return nil
 }
 
-func (s *Storage) GetProviders() ([]d.Provider){
+func (s *Storage) GetProviders() []d.Provider {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	ret := make([]d.Provider, 0, len(s.mProviders))
@@ -172,29 +172,29 @@ func (s *Storage) GetProviders() ([]d.Provider){
 	return ret
 }
 
-func (s *Storage) FindProvider(providerID string) (d.Provider, error){
+func (s *Storage) FindProvider(providerID string) (d.Provider, error) {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	p, ok := s.mProviders[providerID]
-	if(!ok){
+	if !ok {
 		return nil, errors.New("No such provider:" + providerID)
 	}
 	return p, nil
 }
 
-func (s *Storage) FindProviderByGame(gameName string) ([]d.Provider){
+func (s *Storage) FindProviderByGame(gameName string) []d.Provider {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	ret := make([]d.Provider, 0, len(s.mProviders))
 	for _, v := range s.mProviders {
-		if(v.GetGameName() == gameName){
+		if v.GetGameName() == gameName {
 			ret = append(ret, v)
 		}
 	}
 	return ret
 }
 
-func (s *Storage) UnRegisterProvider(p d.Provider) (error){
+func (s *Storage) UnRegisterProvider(p d.Provider) error {
 	s.mMutex.Lock()
 	defer s.mMutex.Unlock()
 	delete(s.mProviders, p.GetID())

@@ -15,13 +15,13 @@ func buildOneUserAndOneRoom(f *systemFixture) (uc *userClient, userName string, 
 	})
 
 	token = loginRet.Token
-	
+
 	createRoomRet, _ := uc.mCoreClient.CreateRoom(context.TODO(), &cpb.CreateRoomArgs{
 		Token: token,
 	})
 	roomId = createRoomRet.GetRoomId()
 	uc.mCoreClient.JoinRoom(context.TODO(), &cpb.JoinRoomArgs{
-		Token: token,
+		Token:  token,
 		RoomId: roomId,
 	})
 

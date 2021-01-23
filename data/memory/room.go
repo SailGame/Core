@@ -10,25 +10,25 @@ import (
 )
 
 type Room struct {
-	mRoomID     int32
-	mGameName   string
-	mUsers      map[string]d.User
-	mUserStates map[string]d.UserState
-	mProvider   d.Provider
-	mState      d.RoomState
+	mRoomID      int32
+	mGameName    string
+	mUsers       map[string]d.User
+	mUserStates  map[string]d.UserState
+	mProvider    d.Provider
+	mState       d.RoomState
 	mGameSetting *anypb.Any
-	mMutex      sync.Locker
+	mMutex       sync.Locker
 }
 
 func NewRoom(ID int32) *Room {
 	r := &Room{
-		mRoomID: ID,
-		mUsers: make(map[string]d.User),
-		mUserStates: make(map[string]d.UserState),
-		mProvider: nil,
-		mState: d.RoomState_PREPARING,
+		mRoomID:      ID,
+		mUsers:       make(map[string]d.User),
+		mUserStates:  make(map[string]d.UserState),
+		mProvider:    nil,
+		mState:       d.RoomState_PREPARING,
 		mGameSetting: nil,
-		mMutex: &sync.Mutex{},
+		mMutex:       &sync.Mutex{},
 	}
 	return r
 }
