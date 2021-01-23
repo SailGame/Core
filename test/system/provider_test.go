@@ -115,6 +115,10 @@ func TestGameStart(t *testing.T) {
 
 			So(err, assertions.ShouldBeNil)
 			So(msg.GetStartGameArgs(), assertions.ShouldNotBeNil)
+			err = ptypes.UnmarshalAny(msg.GetStartGameArgs().GetCustom(), unMarshalGameSetting)
+			So(err, assertions.ShouldBeNil)
+			So(unMarshalGameSetting.UserName, assertions.ShouldEqual, "GameSetting")
+			So(unMarshalGameSetting.Points, assertions.ShouldEqual, 99)
 
 			t.Logf("TestProvider send start to TestUser")
 			err = pc.mProviderClient.Send(&cpb.ProviderMsg{
