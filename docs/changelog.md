@@ -1,5 +1,7 @@
-## 1.2.1
+## 1.3.0
 - [bugfix] Pass GameSetting to provider
+- update go to 1.14
+
 ## 1.2.0
 - Support QueryAccount
 - Support GameSetting field in ControlRoom
