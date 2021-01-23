@@ -15,15 +15,15 @@ import (
 
 type systemFixture struct {
 	mCoreServer *server.CoreServer
-	mLis *bufconn.Listener
-	mCtx context.Context
-	mConn *grpc.ClientConn
+	mLis        *bufconn.Listener
+	mCtx        context.Context
+	mConn       *grpc.ClientConn
 }
 
 type userClient struct {
 	mCoreClient cpb.GameCoreClient
-	mLisClient cpb.GameCore_ListenClient
-	mClose context.CancelFunc
+	mLisClient  cpb.GameCore_ListenClient
+	mClose      context.CancelFunc
 }
 
 func (uc *userClient) listenToCore(token string) (err error) {
@@ -36,7 +36,7 @@ func (uc *userClient) listenToCore(token string) (err error) {
 }
 
 type providerClient struct {
-	mCoreClient cpb.GameCoreClient
+	mCoreClient     cpb.GameCoreClient
 	mProviderClient cpb.GameCore_ProviderClient
 }
 
@@ -63,34 +63,34 @@ func (sf *systemFixture) init(config *server.CoreServerConfig) error {
 	if err != nil {
 		return err
 	}
-    cpb.RegisterGameCoreServer(s, sf.mCoreServer)
-    go func() {
-        if err := s.Serve(sf.mLis); err != nil {
-            log.Fatalf("Server exited with error: %v", err)
-        }
+	cpb.RegisterGameCoreServer(s, sf.mCoreServer)
+	go func() {
+		if err := s.Serve(sf.mLis); err != nil {
+			log.Fatalf("Server exited with error: %v", err)
+		}
 	}()
 	return nil
 }
 
-func (sf *systemFixture) dial() (*grpc.ClientConn) {
-	bufDialer := func (context.Context, string) (net.Conn, error) {
+func (sf *systemFixture) dial() *grpc.ClientConn {
+	bufDialer := func(context.Context, string) (net.Conn, error) {
 		return sf.mLis.Dial()
 	}
-    conn, err := grpc.DialContext(sf.mCtx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
-    if err != nil {
-        log.Fatalf("Failed to dial bufnet: %v", err)
+	conn, err := grpc.DialContext(sf.mCtx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Failed to dial bufnet: %v", err)
 	}
 	return conn
 }
 
-func (sf *systemFixture) newUserClient() (*userClient) {
+func (sf *systemFixture) newUserClient() *userClient {
 	conn := sf.dial()
 	return &userClient{
 		mCoreClient: cpb.NewGameCoreClient(conn),
 	}
 }
 
-func (sf *systemFixture) newProviderClient() (*providerClient) {
+func (sf *systemFixture) newProviderClient() *providerClient {
 	conn := sf.dial()
 	return &providerClient{
 		mCoreClient: cpb.NewGameCoreClient(conn),

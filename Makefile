@@ -17,4 +17,4 @@ clean:
 	rm -rf build/* pb/
 
 fmt:
-	go fmt github.com/SailGame/Core
+	go fmt github.com/SailGame/Core/...

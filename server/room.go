@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/SailGame/Core/conn/client"
 	"github.com/SailGame/Core/conn/provider"
@@ -18,6 +19,8 @@ func (coreServer *CoreServer) CreateRoom(ctx context.Context, req *cpb.CreateRoo
 }
 
 func (coreServer *CoreServer) ControlRoom(ctx context.Context, req *cpb.ControlRoomArgs) (*cpb.ControlRoomRet, error) {
+	log.Infof("Control Room token(%s) GameName(%s)", req.GetToken(), req.GetGameName())
+
 	room, err := coreServer.mStorage.FindRoom(req.RoomId)
 	if err != nil {
 		return &cpb.ControlRoomRet{Err: cpb.ErrorNumber_ControlRoom_RoomNotExist}, nil
@@ -31,6 +34,7 @@ func (coreServer *CoreServer) ControlRoom(ctx context.Context, req *cpb.ControlR
 		}
 		// TODO: provider selector
 		room.SetProvider(providers[0])
+		room.SetGameSetting(req.GetCustom())
 	}
 
 	coreServer.NotifyRoomDetails(ctx, room)
@@ -39,6 +43,7 @@ func (coreServer *CoreServer) ControlRoom(ctx context.Context, req *cpb.ControlR
 }
 
 func (coreServer *CoreServer) ListRoom(ctx context.Context, req *cpb.ListRoomArgs) (*cpb.ListRoomRet, error) {
+	log.Debugf("List Room gameName(%s)", req.GetGameName())
 	filter := func(r d.Room) bool {
 		return req.GetGameName() == "" || r.GetGameName() == req.GetGameName()
 	}
@@ -46,6 +51,8 @@ func (coreServer *CoreServer) ListRoom(ctx context.Context, req *cpb.ListRoomArg
 }
 
 func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArgs) (*cpb.JoinRoomRet, error) {
+	log.Debugf("Join Room token(%s) roomID(%d)", req.GetToken(), req.GetRoomId())
+
 	token, err := coreServer.mStorage.FindToken(req.Token)
 	if err != nil {
 		return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_JoinRoom_InvalidToken}, nil
@@ -59,6 +66,9 @@ func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArg
 	}
 	room.Lock()
 	defer room.Unlock()
+
+	log.Debugf("Join Room userName(%s) roomID(%d)", user.GetUserName(), req.GetRoomId())
+
 	curRoom, err := user.GetRoom()
 	if curRoom == room {
 		return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_OK}, nil
@@ -79,6 +89,8 @@ func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArg
 }
 
 func (coreServer *CoreServer) ExitRoom(ctx context.Context, req *cpb.ExitRoomArgs) (*cpb.ExitRoomRet, error) {
+	log.Infof("Exit Room token(%s)", req.GetToken())
+
 	token, err := coreServer.mStorage.FindToken(req.Token)
 	if err != nil {
 		return &cpb.ExitRoomRet{Err: cpb.ErrorNumber_ExitRoom_InvalidToken}, nil
@@ -100,6 +112,8 @@ func (coreServer *CoreServer) ExitRoom(ctx context.Context, req *cpb.ExitRoomArg
 	if err != nil {
 		return &cpb.ExitRoomRet{Err: cpb.ErrorNumber_UnkownError}, nil
 	}
+	log.Infof("Exit Room userName(%s) roomID(%d)", user.GetUserName(), room.GetRoomID())
+
 	coreServer.NotifyRoomDetails(ctx, room)
 
 	return &cpb.ExitRoomRet{Err: cpb.ErrorNumber_OK}, nil

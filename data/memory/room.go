@@ -6,27 +6,31 @@ import (
 	"sync"
 
 	d "github.com/SailGame/Core/data"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type Room struct {
-	mRoomID     int32
-	mGameName   string
-	mUsers      map[string]d.User
-	mUserStates map[string]d.UserState
-	mProvider   d.Provider
-	mState      d.RoomState
-	mMutex      sync.Locker
+	mRoomID      int32
+	mGameName    string
+	mUsers       map[string]d.User
+	mUserStates  map[string]d.UserState
+	mProvider    d.Provider
+	mState       d.RoomState
+	mGameSetting *anypb.Any
+	mMutex       sync.Locker
 }
 
 func NewRoom(ID int32) *Room {
-	r := Room{}
-	r.mRoomID = ID
-	r.mUsers = make(map[string]d.User)
-	r.mUserStates = make(map[string]d.UserState)
-	r.mProvider = nil
-	r.mState = d.RoomState_PREPARING
-	r.mMutex = &sync.Mutex{}
-	return &r
+	r := &Room{
+		mRoomID:      ID,
+		mUsers:       make(map[string]d.User),
+		mUserStates:  make(map[string]d.UserState),
+		mProvider:    nil,
+		mState:       d.RoomState_PREPARING,
+		mGameSetting: nil,
+		mMutex:       &sync.Mutex{},
+	}
+	return r
 }
 
 func (r *Room) Lock() {
@@ -46,6 +50,14 @@ func (r *Room) GetGameName() string {
 		return ""
 	}
 	return r.mProvider.GetGameName()
+}
+
+func (r *Room) GetGameSetting() *anypb.Any {
+	return r.mGameSetting
+}
+
+func (r *Room) SetGameSetting(setting *anypb.Any) {
+	r.mGameSetting = setting
 }
 
 func (r *Room) GetUsers() []d.User {

@@ -55,6 +55,17 @@ func TestRoom(t *testing.T) {
 		So(err, assertions.ShouldBeNil)
 		So(joinRoomRet.Err, assertions.ShouldEqual, core.ErrorNumber_OK)
 
+		qryAccountRet, err := uc.mCoreClient.QueryAccount(context.TODO(), &core.QueryAccountArgs{
+			Key: &core.QueryAccountArgs_Token{
+				Token: token,
+			},
+		})
+
+		So(err, assertions.ShouldBeNil)
+		So(qryAccountRet.Err, assertions.ShouldEqual, core.ErrorNumber_OK)
+		So(qryAccountRet.GetAccount().UserName, assertions.ShouldEqual, userName)
+		So(qryAccountRet.RoomId, assertions.ShouldEqual, room.GetRoomId())
+
 		listRoomRet2, err := uc.mCoreClient.ListRoom(context.TODO(), &core.ListRoomArgs{
 			GameName: "", // show all room
 		})
