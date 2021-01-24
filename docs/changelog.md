@@ -1,3 +1,6 @@
+## 1.3.1
+- [bugfix] NotifyMsg: check if the id is negative before flip it
+
 ## 1.3.0
 - [bugfix] Pass GameSetting to provider
 - update go to 1.14

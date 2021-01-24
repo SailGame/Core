@@ -57,7 +57,7 @@ func (coreServer *CoreServer) HandleNotifyMsg(conn *provider.Conn, providerMsg *
 			return nil
 		}
 		clientConn := conn.(*client.Conn)
-		if (notifyMsg.UserId == 0) || (notifyMsg.UserId > 0 && uint32(notifyMsg.UserId) == user.GetTemporaryID()) || (uint32(-notifyMsg.UserId) != user.GetTemporaryID()) {
+		if (notifyMsg.UserId == 0) || (notifyMsg.UserId > 0 && uint32(notifyMsg.UserId) == user.GetTemporaryID()) || (notifyMsg.UserId < 0 && uint32(-notifyMsg.UserId) != user.GetTemporaryID()) {
 			err = clientConn.Send(broadcastMsg)
 			if err != nil {
 				user.SetConn(nil)
