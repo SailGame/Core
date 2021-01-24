@@ -169,7 +169,7 @@ func (coreServer *CoreServer) OperationInRoom(ctx context.Context, req *cpb.Oper
 					&cpb.StartGameArgs{
 						RoomId: room.GetRoomID(),
 						UserId: toUserTempID(room.GetUsers()),
-						Custom: nil,
+						Custom: room.GetGameSetting(),
 					},
 				},
 			})
