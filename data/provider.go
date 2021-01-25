@@ -14,7 +14,7 @@ import (
 type Provider interface {
 	GetConn() (interface{}, error)
 	GetID() string
-	GetGameName() string
+	GetGameSetting() *CommonGameSetting
 	GetRooms() []Room
 	GetRoom(int32) Room
 
@@ -26,16 +26,22 @@ type Provider interface {
 type CommonProvider struct {
 	mConn     interface{}
 	mID       string
-	mGameName string
+	mGameSetting CommonGameSetting
 	mRooms    map[int32]Room
 	mMutex    sync.Locker
 }
 
-func NewCommonProvider(conn interface{}, id string, gameName string) *CommonProvider {
+type CommonGameSetting struct {
+	GameName string
+	MaxUser int32
+	MinUser int32
+}
+
+func NewCommonProvider(conn interface{}, id string, gameSetting CommonGameSetting) *CommonProvider {
 	provider := &CommonProvider{
 		mConn:     conn,
 		mID:       id,
-		mGameName: gameName,
+		mGameSetting: gameSetting,
 		mRooms:    make(map[int32]Room),
 		mMutex:    &sync.Mutex{},
 	}
@@ -53,8 +59,8 @@ func (cp *CommonProvider) GetID() string {
 	return cp.mID
 }
 
-func (cp *CommonProvider) GetGameName() string {
-	return cp.mGameName
+func (cp *CommonProvider) GetGameSetting() *CommonGameSetting {
+	return &cp.mGameSetting
 }
 
 func (cp *CommonProvider) GetRooms() []Room {

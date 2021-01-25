@@ -11,7 +11,6 @@ import (
 
 type Room struct {
 	mRoomID      int32
-	mGameName    string
 	mUsers       map[string]d.User
 	mUserStates  map[string]d.UserState
 	mProvider    d.Provider
@@ -49,7 +48,7 @@ func (r *Room) GetGameName() string {
 	if r.mProvider == nil {
 		return ""
 	}
-	return r.mProvider.GetGameName()
+	return r.mProvider.GetGameSetting().GameName
 }
 
 func (r *Room) GetGameSetting() *anypb.Any {
@@ -76,7 +75,6 @@ func (r *Room) SetProvider(provider d.Provider) {
 		r.mProvider.DelRoom(r)
 	}
 	r.mProvider = provider
-	r.mGameName = provider.GetGameName()
 	provider.AddRoom(r)
 }
 
@@ -124,15 +122,19 @@ func (r *Room) UserReady(user d.User, isReady bool) error {
 	} else {
 		r.mUserStates[user.GetUserName()] = d.UserState_PREPARING
 	}
-	for _, v := range r.mUserStates {
-		if v != d.UserState_READY {
-			return nil
+
+	if (r.mProvider != nil && int32(len(r.mUsers)) >= r.mProvider.GetGameSetting().MinUser){
+		for _, v := range r.mUserStates {
+			if v != d.UserState_READY {
+				return nil
+			}
 		}
+		for k := range r.mUserStates {
+			r.mUserStates[k] = d.UserState_PLAYING
+		}
+		r.mState = d.RoomState_PLAYING
 	}
-	for k := range r.mUserStates {
-		r.mUserStates[k] = d.UserState_PLAYING
-	}
-	r.mState = d.RoomState_PLAYING
+
 	return nil
 }
 

@@ -187,7 +187,7 @@ func (s *Storage) FindProviderByGame(gameName string) []d.Provider {
 	defer s.mMutex.Unlock()
 	ret := make([]d.Provider, 0, len(s.mProviders))
 	for _, v := range s.mProviders {
-		if v.GetGameName() == gameName {
+		if v.GetGameSetting().GameName == gameName {
 			ret = append(ret, v)
 		}
 	}
