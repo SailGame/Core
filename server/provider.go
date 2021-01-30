@@ -47,6 +47,14 @@ func (coreServer *CoreServer) HandleRegisterArgs(conn *provider.Conn, providerMs
 	log.Infof("Provider register: (%s) (%s)", regArgs.GetId(), regArgs.GetGameName())
 	conn.ID = p
 	conn.PrintID = regArgs.GetId() + ":" + regArgs.GetGameName()
+
+	conn.Send(&cpb.ProviderMsg{
+		Msg: &cpb.ProviderMsg_RegisterRet{
+			RegisterRet: &cpb.RegisterRet{
+				Err: cpb.ErrorNumber_OK,
+			},
+		},
+	})
 	return nil
 }
 

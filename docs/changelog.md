@@ -2,8 +2,7 @@
 
 ## 1.4.0
 - support minUser/maxUser
-  - test (todo)
-- unit test fixture (todo)
+- unit test fixture
 - close game (todo)
 
 ## 1.3.1

@@ -1,4 +1,4 @@
-.PHONY: core test proto image clean fmt
+.PHONY: core test proto image clean fmt generate
 
 core:
 	go build -o build/core
@@ -13,6 +13,9 @@ proto:
 
 image:
 	docker build -t sailgame/core --build-arg GOPROXY=`go env GOPROXY` .
+
+generate:
+	go generate ./...
 
 clean:
 	rm -rf build/* pb/

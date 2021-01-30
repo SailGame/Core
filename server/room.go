@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/SailGame/Core/conn/client"
@@ -34,7 +35,7 @@ func (coreServer *CoreServer) ControlRoom(ctx context.Context, req *cpb.ControlR
 		}
 		// TODO: provider selector
 		room.SetProvider(providers[0])
-		room.SetGameSetting(req.GetCustom())
+		room.SetCustomGameSetting(req.GetCustom())
 	}
 
 	coreServer.NotifyRoomDetails(ctx, room)
@@ -166,10 +167,10 @@ func (coreServer *CoreServer) OperationInRoom(ctx context.Context, req *cpb.Oper
 		if room.GetState() == d.RoomState_PLAYING {
 			pConn.Send(&cpb.ProviderMsg{
 				Msg: &cpb.ProviderMsg_StartGameArgs{
-					&cpb.StartGameArgs{
+					StartGameArgs: &cpb.StartGameArgs{
 						RoomId: room.GetRoomID(),
 						UserId: toUserTempID(room.GetUsers()),
-						Custom: room.GetGameSetting(),
+						Custom: room.GetCustomGameSetting(),
 					},
 				},
 			})
@@ -177,7 +178,7 @@ func (coreServer *CoreServer) OperationInRoom(ctx context.Context, req *cpb.Oper
 	} else if custom := req.GetCustom(); custom != nil {
 		pConn.Send(&cpb.ProviderMsg{
 			Msg: &cpb.ProviderMsg_UserOperationArgs{
-				&cpb.UserOperationArgs{
+				UserOperationArgs: &cpb.UserOperationArgs{
 					RoomId: room.GetRoomID(),
 					UserId: token.GetUser().GetTemporaryID(),
 					Custom: custom,

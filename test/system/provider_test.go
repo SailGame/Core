@@ -110,8 +110,11 @@ func TestGameStart(t *testing.T) {
 		})
 
 		go Convey("pc recv", t, func() {
-			msg, err := pc.mProviderClient.Recv()
+			regRetMsg, err := pc.mProviderClient.Recv()
+			So(err, ShouldBeNil)
+			So(regRetMsg.GetRegisterRet(), ShouldNotBeNil)
 
+			msg, err := pc.mProviderClient.Recv()
 			So(err, ShouldBeNil)
 			So(msg.GetStartGameArgs(), ShouldNotBeNil)
 			err = ptypes.UnmarshalAny(msg.GetStartGameArgs().GetCustom(), unMarshalGameSetting)

@@ -10,24 +10,24 @@ import (
 )
 
 type Room struct {
-	mRoomID      int32
-	mUsers       map[string]d.User
-	mUserStates  map[string]d.UserState
-	mProvider    d.Provider
-	mState       d.RoomState
-	mGameSetting *anypb.Any
-	mMutex       sync.Locker
+	mRoomID            int32
+	mUsers             map[string]d.User
+	mUserStates        map[string]d.UserState
+	mProvider          d.Provider
+	mState             d.RoomState
+	mCustomGameSetting *anypb.Any
+	mMutex             sync.Locker
 }
 
 func NewRoom(ID int32) *Room {
 	r := &Room{
-		mRoomID:      ID,
-		mUsers:       make(map[string]d.User),
-		mUserStates:  make(map[string]d.UserState),
-		mProvider:    nil,
-		mState:       d.RoomState_PREPARING,
-		mGameSetting: nil,
-		mMutex:       &sync.Mutex{},
+		mRoomID:            ID,
+		mUsers:             make(map[string]d.User),
+		mUserStates:        make(map[string]d.UserState),
+		mProvider:          nil,
+		mState:             d.RoomState_PREPARING,
+		mCustomGameSetting: nil,
+		mMutex:             &sync.Mutex{},
 	}
 	return r
 }
@@ -51,12 +51,12 @@ func (r *Room) GetGameName() string {
 	return r.mProvider.GetGameSetting().GameName
 }
 
-func (r *Room) GetGameSetting() *anypb.Any {
-	return r.mGameSetting
+func (r *Room) GetCustomGameSetting() *anypb.Any {
+	return r.mCustomGameSetting
 }
 
-func (r *Room) SetGameSetting(setting *anypb.Any) {
-	r.mGameSetting = setting
+func (r *Room) SetCustomGameSetting(setting *anypb.Any) {
+	r.mCustomGameSetting = setting
 }
 
 func (r *Room) GetUsers() []d.User {
@@ -125,7 +125,7 @@ func (r *Room) UserReady(user d.User, isReady bool) error {
 		r.mUserStates[user.GetUserName()] = d.UserState_PREPARING
 	}
 
-	if r.mProvider != nil && int32(len(r.mUsers)) >= r.mProvider.GetGameSetting().MinUser {
+	if r.mProvider != nil && int32(len(r.mUsers)) >= r.mProvider.GetGameSetting().MinUser && int32(len(r.mUsers)) <= r.mProvider.GetGameSetting().MaxUser {
 		for _, v := range r.mUserStates {
 			if v != d.UserState_READY {
 				return nil

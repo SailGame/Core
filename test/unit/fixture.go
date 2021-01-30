@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/SailGame/Core/data/memory"
 	cpb "github.com/SailGame/Core/pb/core"
 	"github.com/SailGame/Core/pb/core/mocks"
 	"github.com/SailGame/Core/server"
@@ -13,39 +14,41 @@ import (
 )
 
 type fixture struct {
-	ctrl       *gomock.Controller
-	coreServer *server.CoreServer
-	userNum int
+	ctrl        *gomock.Controller
+	coreServer  *server.CoreServer
+	userNum     int
 	providerNum int
 }
 
 type provider struct {
-	mId string
+	mId                 string
 	mMockProviderServer *mocks.MockGameCore_ProviderServer
 	mSendMsgCh          chan *cpb.ProviderMsg
 }
 
 type user struct {
 	mMockUserServer *mocks.MockGameCore_ListenServer
-	mUserName string
-	mToken string
-	mRoomId int32
-	mState bool
+	mUserName       string
+	mToken          string
+	mRoomId         int32
+	mState          bool
 }
 
 func newFixture(t *testing.T) *fixture {
-	coreServer, _ := server.NewCoreServer(&server.CoreServerConfig{})
+	coreServer, _ := server.NewCoreServer(&server.CoreServerConfig{
+		MStorage: memory.NewStorage(),
+	})
 	f := &fixture{
 		ctrl:       gomock.NewController(t),
 		coreServer: coreServer,
-		userNum: 0,
+		userNum:    0,
 	}
 	return f
 }
 
 func (f *fixture) newMockProvider() *provider {
 	p := &provider{
-		mId: strconv.Itoa(f.providerNum),
+		mId:                 strconv.Itoa(f.providerNum),
 		mMockProviderServer: mocks.NewMockGameCore_ProviderServer(f.ctrl),
 		mSendMsgCh:          make(chan *cpb.ProviderMsg),
 	}
@@ -55,17 +58,17 @@ func (f *fixture) newMockProvider() *provider {
 		msg := <-p.mSendMsgCh
 		return msg, nil
 	})
-	f.coreServer.Provider(p.mMockProviderServer)
+	go f.coreServer.Provider(p.mMockProviderServer)
 	return p
 }
 
 func (f *fixture) newMockUser() *user {
 	u := &user{
 		mMockUserServer: mocks.NewMockGameCore_ListenServer(f.ctrl),
-		mUserName: strconv.Itoa(f.userNum),
-		mToken: "",
-		mRoomId: 0,
-		mState: false,
+		mUserName:       strconv.Itoa(f.userNum),
+		mToken:          "",
+		mRoomId:         0,
+		mState:          false,
 	}
 	f.userNum = f.userNum + 1
 
@@ -78,12 +81,9 @@ func (f *fixture) newMockUser() *user {
 
 	u.mToken = loginRet.GetToken()
 
-	err = f.coreServer.Listen(&cpb.ListenArgs{
+	go f.coreServer.Listen(&cpb.ListenArgs{
 		Token: u.mToken,
 	}, u.mMockUserServer)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	return u
 }
@@ -104,14 +104,25 @@ func (f *fixture) done() {
 
 func (f *fixture) joinRoom(roomId int32, u *user) cpb.ErrorNumber {
 	ret, err := f.coreServer.JoinRoom(context.TODO(), &cpb.JoinRoomArgs{
-		Token: u.mToken,
+		Token:  u.mToken,
 		RoomId: roomId,
 	})
-
 	if err != nil {
 		log.Fatal(err)
 	}
 	u.mRoomId = roomId
+	return ret.GetErr()
+}
+
+func (f *fixture) controlRoom(u *user, gameName string) cpb.ErrorNumber {
+	ret, err := f.coreServer.ControlRoom(context.TODO(), &cpb.ControlRoomArgs{
+		Token:    u.mToken,
+		RoomId:   u.mRoomId,
+		GameName: gameName,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
 	return ret.GetErr()
 }
 
