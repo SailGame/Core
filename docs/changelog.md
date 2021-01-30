@@ -1,4 +1,5 @@
 # Core
+
 ## 1.4.0
 - support minUser/maxUser
   - test (todo)

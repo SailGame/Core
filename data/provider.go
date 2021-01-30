@@ -24,26 +24,26 @@ type Provider interface {
 
 // CommonProvider has the basic functionality of a 'provider'
 type CommonProvider struct {
-	mConn     interface{}
-	mID       string
+	mConn        interface{}
+	mID          string
 	mGameSetting CommonGameSetting
-	mRooms    map[int32]Room
-	mMutex    sync.Locker
+	mRooms       map[int32]Room
+	mMutex       sync.Locker
 }
 
 type CommonGameSetting struct {
 	GameName string
-	MaxUser int32
-	MinUser int32
+	MaxUser  int32
+	MinUser  int32
 }
 
 func NewCommonProvider(conn interface{}, id string, gameSetting CommonGameSetting) *CommonProvider {
 	provider := &CommonProvider{
-		mConn:     conn,
-		mID:       id,
+		mConn:        conn,
+		mID:          id,
 		mGameSetting: gameSetting,
-		mRooms:    make(map[int32]Room),
-		mMutex:    &sync.Mutex{},
+		mRooms:       make(map[int32]Room),
+		mMutex:       &sync.Mutex{},
 	}
 	return provider
 }

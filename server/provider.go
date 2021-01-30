@@ -12,6 +12,21 @@ import (
 	cpb "github.com/SailGame/Core/pb/core"
 )
 
+// settings
+func getMaxUsers(regArgs *cpb.RegisterArgs) int32 {
+	if regArgs == nil || regArgs.GameSetting == nil {
+		return 888
+	}
+	return regArgs.GameSetting.MaxUsers
+}
+
+func getMinUsers(regArgs *cpb.RegisterArgs) int32 {
+	if regArgs == nil || regArgs.GameSetting == nil {
+		return 1
+	}
+	return regArgs.GameSetting.MinUsers
+}
+
 func (coreServer *CoreServer) Provider(pServer cpb.GameCore_ProviderServer) error {
 	log.Info("Provider connected")
 	conn := provider.NewConn(pServer, coreServer)
@@ -22,8 +37,8 @@ func (coreServer *CoreServer) Provider(pServer cpb.GameCore_ProviderServer) erro
 func (coreServer *CoreServer) HandleRegisterArgs(conn *provider.Conn, providerMsg *cpb.ProviderMsg, regArgs *cpb.RegisterArgs) error {
 	p := d.NewCommonProvider(conn, regArgs.GetId(), d.CommonGameSetting{
 		GameName: regArgs.GetGameName(),
-		MaxUser: regArgs.GameSetting.MaxUsers,
-		MinUser: regArgs.GameSetting.MinUsers,
+		MaxUser:  getMaxUsers(regArgs),
+		MinUser:  getMinUsers(regArgs),
 	})
 	if err := coreServer.mStorage.RegisterProvider(p); err != nil {
 		log.Warnf("Provider register failed: (%s) (%s) (%s)", regArgs.GetId(), regArgs.GetGameName(), err.Error())

@@ -95,7 +95,9 @@ func (r *Room) GetUserState(user d.User) (d.UserState, error) {
 }
 
 func (r *Room) UserJoin(user d.User) error {
-	// TODO: check room capacity
+	if r.mProvider != nil && len(r.mUsers) == int(r.mProvider.GetGameSetting().MaxUser) {
+		return errors.New("Full Room")
+	}
 	if r.mState == d.RoomState_PLAYING {
 		_, ok := r.mUsers[user.GetUserName()]
 		if ok && r.mUserStates[user.GetUserName()] == d.UserState_EXITED {
@@ -123,7 +125,7 @@ func (r *Room) UserReady(user d.User, isReady bool) error {
 		r.mUserStates[user.GetUserName()] = d.UserState_PREPARING
 	}
 
-	if (r.mProvider != nil && int32(len(r.mUsers)) >= r.mProvider.GetGameSetting().MinUser){
+	if r.mProvider != nil && int32(len(r.mUsers)) >= r.mProvider.GetGameSetting().MinUser {
 		for _, v := range r.mUserStates {
 			if v != d.UserState_READY {
 				return nil

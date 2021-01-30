@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/smartystreets/assertions"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/SailGame/Core/data/memory"
@@ -24,7 +23,7 @@ func TestRoom(t *testing.T) {
 			UserName: userName,
 			Password: "",
 		})
-		So(err, assertions.ShouldBeNil)
+		So(err, ShouldBeNil)
 
 		token := loginRet.Token
 
@@ -32,28 +31,28 @@ func TestRoom(t *testing.T) {
 			Token: token,
 		})
 
-		So(err, assertions.ShouldBeNil)
-		So(createRoomRet.Err, assertions.ShouldEqual, core.ErrorNumber_OK)
+		So(err, ShouldBeNil)
+		So(createRoomRet.Err, ShouldEqual, core.ErrorNumber_OK)
 
 		listRoomRet, err := uc.mCoreClient.ListRoom(context.TODO(), &core.ListRoomArgs{
 			GameName: "", // show all room
 		})
 
-		So(err, assertions.ShouldBeNil)
-		So(listRoomRet.Err, assertions.ShouldEqual, core.ErrorNumber_OK)
-		So(len(listRoomRet.GetRoom()), assertions.ShouldEqual, 1)
+		So(err, ShouldBeNil)
+		So(listRoomRet.Err, ShouldEqual, core.ErrorNumber_OK)
+		So(len(listRoomRet.GetRoom()), ShouldEqual, 1)
 
 		room := listRoomRet.GetRoom()[0]
 
-		So(len(room.UserName), assertions.ShouldEqual, 0)
+		So(len(room.UserName), ShouldEqual, 0)
 
 		joinRoomRet, err := uc.mCoreClient.JoinRoom(context.TODO(), &core.JoinRoomArgs{
 			Token:  token,
 			RoomId: room.GetRoomId(),
 		})
 
-		So(err, assertions.ShouldBeNil)
-		So(joinRoomRet.Err, assertions.ShouldEqual, core.ErrorNumber_OK)
+		So(err, ShouldBeNil)
+		So(joinRoomRet.Err, ShouldEqual, core.ErrorNumber_OK)
 
 		qryAccountRet, err := uc.mCoreClient.QueryAccount(context.TODO(), &core.QueryAccountArgs{
 			Key: &core.QueryAccountArgs_Token{
@@ -61,22 +60,22 @@ func TestRoom(t *testing.T) {
 			},
 		})
 
-		So(err, assertions.ShouldBeNil)
-		So(qryAccountRet.Err, assertions.ShouldEqual, core.ErrorNumber_OK)
-		So(qryAccountRet.GetAccount().UserName, assertions.ShouldEqual, userName)
-		So(qryAccountRet.RoomId, assertions.ShouldEqual, room.GetRoomId())
+		So(err, ShouldBeNil)
+		So(qryAccountRet.Err, ShouldEqual, core.ErrorNumber_OK)
+		So(qryAccountRet.GetAccount().UserName, ShouldEqual, userName)
+		So(qryAccountRet.RoomId, ShouldEqual, room.GetRoomId())
 
 		listRoomRet2, err := uc.mCoreClient.ListRoom(context.TODO(), &core.ListRoomArgs{
 			GameName: "", // show all room
 		})
 
-		So(err, assertions.ShouldBeNil)
-		So(listRoomRet2.Err, assertions.ShouldEqual, core.ErrorNumber_OK)
-		So(len(listRoomRet.GetRoom()), assertions.ShouldEqual, 1)
+		So(err, ShouldBeNil)
+		So(listRoomRet2.Err, ShouldEqual, core.ErrorNumber_OK)
+		So(len(listRoomRet.GetRoom()), ShouldEqual, 1)
 
 		room2 := listRoomRet2.GetRoom()[0]
 
-		So(len(room2.UserName), assertions.ShouldEqual, 1)
-		So(room2.UserName[0], assertions.ShouldEqual, userName)
+		So(len(room2.UserName), ShouldEqual, 1)
+		So(room2.UserName[0], ShouldEqual, userName)
 	})
 }
