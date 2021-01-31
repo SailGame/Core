@@ -2,6 +2,7 @@ package data
 
 // Storage is an abstract layer between data user and data store
 // all the type is interface
+//go:generate mockgen -destination=mocks/storage.go -package=mocks . Storage
 type Storage interface {
 	CreateRoom() (Room, error)
 	GetRooms() []Room

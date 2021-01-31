@@ -14,15 +14,15 @@ import (
 
 // settings
 func getMaxUsers(regArgs *cpb.RegisterArgs) int32 {
-	if regArgs == nil || regArgs.GameSetting == nil {
-		return 888
+	if regArgs == nil || regArgs.GameSetting == nil || regArgs.GameSetting.MaxUsers <= 0 {
+		return 0
 	}
 	return regArgs.GameSetting.MaxUsers
 }
 
 func getMinUsers(regArgs *cpb.RegisterArgs) int32 {
-	if regArgs == nil || regArgs.GameSetting == nil {
-		return 1
+	if regArgs == nil || regArgs.GameSetting == nil || regArgs.GameSetting.MaxUsers <= 0 {
+		return 0
 	}
 	return regArgs.GameSetting.MinUsers
 }

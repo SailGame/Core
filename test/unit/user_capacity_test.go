@@ -2,7 +2,6 @@ package unit
 
 import (
 	"testing"
-	"time"
 
 	. "github.com/smartystreets/goconvey/convey"
 
@@ -38,7 +37,6 @@ func TestMaxUser(t *testing.T) {
 				},
 			},
 		})
-		time.Sleep(500 * time.Microsecond)
 		u1.mMockUserServer.EXPECT().Send(gomock.Any()).Times(1)
 		So(f.joinRoom(room, u1), ShouldEqual, cpb.ErrorNumber_OK)
 		u1.mMockUserServer.EXPECT().Send(gomock.Any()).Times(1)
@@ -74,7 +72,6 @@ func TestMinUser(t *testing.T) {
 				},
 			},
 		})
-		time.Sleep(500 * time.Microsecond)
 
 		p.mMockProviderServer.EXPECT().Send(gomock.Any()).Times(0)
 		u1.mMockUserServer.EXPECT().Send(gomock.Any()).Times(1)

@@ -181,8 +181,7 @@ func (f *fixture) newUsersAndRoom(userNum int) (users []*user, roomID int32, p *
 	return
 }
 
-
 func (p *provider) send(msg *cpb.ProviderMsg) {
 	p.mSendMsgCh <- msg
-	time.Sleep(500 * time.Microsecond)
+	time.Sleep(10 * time.Millisecond)
 }

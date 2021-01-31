@@ -9,6 +9,14 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+func isFullRoom(cgs *d.CommonGameSetting, num int32) bool {
+	return (cgs.MaxUser != 0 && num >= cgs.MaxUser)
+}
+
+func isAcceptableUserNum(cgs *d.CommonGameSetting, num int32) bool {
+	return (cgs.MaxUser == 0 || num <= cgs.MaxUser) && cgs.MinUser <= num
+}
+
 type Room struct {
 	mRoomID            int32
 	mUsers             map[string]d.User
@@ -95,7 +103,7 @@ func (r *Room) GetUserState(user d.User) (d.UserState, error) {
 }
 
 func (r *Room) UserJoin(user d.User) error {
-	if r.mProvider != nil && len(r.mUsers) == int(r.mProvider.GetGameSetting().MaxUser) {
+	if r.mProvider != nil && isFullRoom(r.mProvider.GetGameSetting(), int32(len(r.GetUsers()))) {
 		return errors.New("Full Room")
 	}
 	if r.mState == d.RoomState_PLAYING {
@@ -125,7 +133,7 @@ func (r *Room) UserReady(user d.User, isReady bool) error {
 		r.mUserStates[user.GetUserName()] = d.UserState_PREPARING
 	}
 
-	if r.mProvider != nil && int32(len(r.mUsers)) >= r.mProvider.GetGameSetting().MinUser && int32(len(r.mUsers)) <= r.mProvider.GetGameSetting().MaxUser {
+	if r.mProvider != nil && isAcceptableUserNum(r.mProvider.GetGameSetting(), int32(len(r.mUsers))) {
 		for _, v := range r.mUserStates {
 			if v != d.UserState_READY {
 				return nil
