@@ -38,4 +38,4 @@ jobs:
       run: |
         make
     - name: test
-      run: go test -cpu 1,4 -timeout 7m github.com/SailGame/Core/...
+      run: make test
