@@ -3,7 +3,7 @@
 ## 1.4.0
 - support minUser/maxUser
 - unit test fixture
-- close game (todo)
+- support CloseGameMsg
 
 ## 1.3.1
 - [bugfix] NotifyMsg: check if the id is negative before flip it
