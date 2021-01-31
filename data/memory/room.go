@@ -114,7 +114,7 @@ func (r *Room) UserJoin(user d.User) error {
 func (r *Room) UserReady(user d.User, isReady bool) error {
 	_, ok := r.mUsers[user.GetUserName()]
 	if !ok {
-		return errors.New(fmt.Sprintf("No such user(%s) in room(%d)", user.GetUserName(), r.mRoomID))
+		return fmt.Errorf("No such user(%s) in room(%d)", user.GetUserName(), r.mRoomID)
 	}
 	if r.mState == d.RoomState_PLAYING {
 		return errors.New("Not support change user state when game is playing")
@@ -140,18 +140,19 @@ func (r *Room) UserReady(user d.User, isReady bool) error {
 	return nil
 }
 
-func (r *Room) UserExit(user d.User) error {
+func (r *Room) UserExit(user d.User) (bool, error) {
 	_, ok := r.mUsers[user.GetUserName()]
 	if !ok {
-		return errors.New(fmt.Sprintf("No such user(%s) in room(%d)", user.GetUserName(), r.mRoomID))
+		return false, fmt.Errorf("No such user(%s) in room(%d)", user.GetUserName(), r.mRoomID)
 	}
 	if r.mState == d.RoomState_PLAYING {
 		r.mUserStates[user.GetUserName()] = d.UserState_EXITED
+		return false, nil
 	} else {
 		delete(r.mUsers, user.GetUserName())
 		delete(r.mUserStates, user.GetUserName())
 	}
-	return nil
+	return true, nil
 }
 
 func (r *Room) Restart() error {
@@ -159,9 +160,11 @@ func (r *Room) Restart() error {
 		if state == d.UserState_PLAYING {
 			r.mUserStates[un] = d.UserState_PREPARING
 		} else if state == d.UserState_EXITED {
+			r.mUsers[un].SetRoom(nil)
 			delete(r.mUsers, un)
 			delete(r.mUserStates, un)
 		}
 	}
+	r.mState = d.RoomState_PREPARING
 	return nil
 }

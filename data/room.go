@@ -36,7 +36,7 @@ type Room interface {
 
 	UserJoin(User) error
 	UserReady(User, bool) error
-	UserExit(User) error
+	UserExit(User) (bool, error)
 
 	Restart() error
 }

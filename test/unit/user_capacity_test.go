@@ -10,9 +10,12 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
+const (
+	testGame string = "testGame"
+)
+
 func TestMaxUser(t *testing.T) {
 	Convey("Test Max User", t, func() {
-		testGame := "testGame"
 		f := newFixture(t)
 		defer f.done()
 		p := f.newMockProvider()
@@ -23,7 +26,7 @@ func TestMaxUser(t *testing.T) {
 
 		// register provider
 		p.mMockProviderServer.EXPECT().Send(gomock.Any()).Times(1)
-		p.mSendMsgCh <- &cpb.ProviderMsg{
+		p.send(&cpb.ProviderMsg{
 			Msg: &cpb.ProviderMsg_RegisterArgs{
 				RegisterArgs: &cpb.RegisterArgs{
 					Id:       p.mId,
@@ -34,7 +37,7 @@ func TestMaxUser(t *testing.T) {
 					},
 				},
 			},
-		}
+		})
 		time.Sleep(500 * time.Microsecond)
 		u1.mMockUserServer.EXPECT().Send(gomock.Any()).Times(1)
 		So(f.joinRoom(room, u1), ShouldEqual, cpb.ErrorNumber_OK)
@@ -49,7 +52,6 @@ func TestMaxUser(t *testing.T) {
 
 func TestMinUser(t *testing.T) {
 	Convey("Test Min User", t, func() {
-		testGame := "testGame"
 		f := newFixture(t)
 		defer f.done()
 		p := f.newMockProvider()
@@ -60,7 +62,7 @@ func TestMinUser(t *testing.T) {
 
 		// register provider
 		p.mMockProviderServer.EXPECT().Send(gomock.Any()).Times(1)
-		p.mSendMsgCh <- &cpb.ProviderMsg{
+		p.send(&cpb.ProviderMsg{
 			Msg: &cpb.ProviderMsg_RegisterArgs{
 				RegisterArgs: &cpb.RegisterArgs{
 					Id:       p.mId,
@@ -71,7 +73,7 @@ func TestMinUser(t *testing.T) {
 					},
 				},
 			},
-		}
+		})
 		time.Sleep(500 * time.Microsecond)
 
 		p.mMockProviderServer.EXPECT().Send(gomock.Any()).Times(0)

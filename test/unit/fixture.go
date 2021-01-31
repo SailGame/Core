@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/SailGame/Core/data/memory"
 	cpb "github.com/SailGame/Core/pb/core"
@@ -44,6 +45,10 @@ func newFixture(t *testing.T) *fixture {
 		userNum:    0,
 	}
 	return f
+}
+
+func (f *fixture) done() {
+	f.ctrl.Finish()
 }
 
 func (f *fixture) newMockProvider() *provider {
@@ -98,10 +103,6 @@ func (f *fixture) newRoom(u *user) int32 {
 	return ret.GetRoomId()
 }
 
-func (f *fixture) done() {
-	f.ctrl.Finish()
-}
-
 func (f *fixture) joinRoom(roomId int32, u *user) cpb.ErrorNumber {
 	ret, err := f.coreServer.JoinRoom(context.TODO(), &cpb.JoinRoomArgs{
 		Token:  u.mToken,
@@ -137,4 +138,51 @@ func (f *fixture) userReady(u *user) cpb.ErrorNumber {
 		log.Fatal(err)
 	}
 	return ret.GetErr()
+}
+
+func (f *fixture) newUsersAndRoom(userNum int) (users []*user, roomID int32, p *provider) {
+	if userNum < 0 {
+		log.Fatalf("newUsersAndRoom: userNum < 0")
+	}
+	testGame := "testGame"
+	p = f.newMockProvider()
+
+	users = make([]*user, 0)
+	for i := 0; i < userNum; i++ {
+		u := f.newMockUser()
+		u.mMockUserServer.EXPECT().Send(gomock.Any()).AnyTimes()
+		users = append(users, u)
+	}
+	roomID = f.newRoom(users[0])
+
+	// register provider
+	p.mMockProviderServer.EXPECT().Send(gomock.Any()).Times(1)
+	p.send(&cpb.ProviderMsg{
+		Msg: &cpb.ProviderMsg_RegisterArgs{
+			RegisterArgs: &cpb.RegisterArgs{
+				Id:       p.mId,
+				GameName: testGame,
+				GameSetting: &cpb.GameSetting{
+					MaxUsers: int32(userNum),
+					MinUsers: int32(userNum),
+				},
+			},
+		},
+	})
+
+	for _, u := range users {
+		if f.joinRoom(roomID, u) != cpb.ErrorNumber_OK {
+			log.Fatal("newUsersAndRoom: joinRoom fail")
+		}
+	}
+	if f.controlRoom(users[0], testGame) != cpb.ErrorNumber_OK {
+		log.Fatalf("newUsersAndRoom: controlRoom fail")
+	}
+	return
+}
+
+
+func (p *provider) send(msg *cpb.ProviderMsg) {
+	p.mSendMsgCh <- msg
+	time.Sleep(500 * time.Microsecond)
 }

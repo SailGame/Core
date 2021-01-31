@@ -67,8 +67,10 @@ func (coreServer *CoreServer) HandleNotifyMsg(conn *provider.Conn, providerMsg *
 	p := conn.ID.(d.Provider)
 	room := p.GetRoom(notifyMsg.RoomId)
 	if room == nil {
-		return errors.New(fmt.Sprintf("NotifyMsgArgs: Unknown RoomId: (%d) conn: (%s)", notifyMsg.RoomId, conn.PrintID))
+		return fmt.Errorf("NotifyMsgArgs: Unknown RoomId: (%d) conn: (%s)", notifyMsg.RoomId, conn.PrintID)
 	}
+
+	log.Debugf("NotifyMsgArgs: conn(%s) room(%d)", conn.PrintID, notifyMsg.RoomId)
 
 	broadcastMsg := &cpb.BroadcastMsg{
 		FromUser: 0,
@@ -96,6 +98,21 @@ func (coreServer *CoreServer) HandleNotifyMsg(conn *provider.Conn, providerMsg *
 
 	return nil
 }
+
+func (coreServer *CoreServer) HandleCloseGameMsg(conn *provider.Conn, providerMsg *cpb.ProviderMsg, closeGameArgs *cpb.CloseGameArgs) error {
+	roomID := closeGameArgs.GetRoomId()
+	room, err := coreServer.mStorage.FindRoom(roomID)
+	if err != nil {
+		return fmt.Errorf("CloseGameArgs: Unknown RoomId: (%d) conn: (%s)", roomID, conn.PrintID)
+	}
+	log.Debugf("CloseGameMsg: conn(%s) room(%d)", conn.PrintID, closeGameArgs.RoomId)
+
+	room.Lock()
+	defer room.Unlock()
+	room.Restart()
+	return nil
+}
+
 
 func (coreServer *CoreServer) Disconnect(conn *provider.Conn) {
 	if conn.ID != nil {
