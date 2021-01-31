@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/smartystreets/assertions"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/SailGame/Core/data/memory"
@@ -24,9 +23,9 @@ func TestAccountLogin(t *testing.T) {
 			UserName: userName,
 			Password: "",
 		})
-		So(err, assertions.ShouldBeNil)
-		So(ret.Err, assertions.ShouldEqual, core.ErrorNumber_OK)
-		So(ret.Token, assertions.ShouldNotBeBlank)
-		So(ret.GetAccount().GetUserName(), assertions.ShouldEqual, userName)
+		So(err, ShouldBeNil)
+		So(ret.Err, ShouldEqual, core.ErrorNumber_OK)
+		So(ret.Token, ShouldNotBeBlank)
+		So(ret.GetAccount().GetUserName(), ShouldEqual, userName)
 	})
 }

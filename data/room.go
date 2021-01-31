@@ -31,12 +31,12 @@ type Room interface {
 	GetProvider() Provider
 	GetState() RoomState
 	GetUserState(User) (UserState, error)
-	GetGameSetting() *anypb.Any
-	SetGameSetting(*anypb.Any)
+	GetCustomGameSetting() *anypb.Any
+	SetCustomGameSetting(*anypb.Any)
 
 	UserJoin(User) error
 	UserReady(User, bool) error
-	UserExit(User) error
+	UserExit(User) (bool, error)
 
 	Restart() error
 }

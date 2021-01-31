@@ -9,26 +9,33 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+func isFullRoom(cgs *d.CommonGameSetting, num int32) bool {
+	return (cgs.MaxUser != 0 && num >= cgs.MaxUser)
+}
+
+func isAcceptableUserNum(cgs *d.CommonGameSetting, num int32) bool {
+	return (cgs.MaxUser == 0 || num <= cgs.MaxUser) && cgs.MinUser <= num
+}
+
 type Room struct {
-	mRoomID      int32
-	mGameName    string
-	mUsers       map[string]d.User
-	mUserStates  map[string]d.UserState
-	mProvider    d.Provider
-	mState       d.RoomState
-	mGameSetting *anypb.Any
-	mMutex       sync.Locker
+	mRoomID            int32
+	mUsers             map[string]d.User
+	mUserStates        map[string]d.UserState
+	mProvider          d.Provider
+	mState             d.RoomState
+	mCustomGameSetting *anypb.Any
+	mMutex             sync.Locker
 }
 
 func NewRoom(ID int32) *Room {
 	r := &Room{
-		mRoomID:      ID,
-		mUsers:       make(map[string]d.User),
-		mUserStates:  make(map[string]d.UserState),
-		mProvider:    nil,
-		mState:       d.RoomState_PREPARING,
-		mGameSetting: nil,
-		mMutex:       &sync.Mutex{},
+		mRoomID:            ID,
+		mUsers:             make(map[string]d.User),
+		mUserStates:        make(map[string]d.UserState),
+		mProvider:          nil,
+		mState:             d.RoomState_PREPARING,
+		mCustomGameSetting: nil,
+		mMutex:             &sync.Mutex{},
 	}
 	return r
 }
@@ -49,15 +56,15 @@ func (r *Room) GetGameName() string {
 	if r.mProvider == nil {
 		return ""
 	}
-	return r.mProvider.GetGameName()
+	return r.mProvider.GetGameSetting().GameName
 }
 
-func (r *Room) GetGameSetting() *anypb.Any {
-	return r.mGameSetting
+func (r *Room) GetCustomGameSetting() *anypb.Any {
+	return r.mCustomGameSetting
 }
 
-func (r *Room) SetGameSetting(setting *anypb.Any) {
-	r.mGameSetting = setting
+func (r *Room) SetCustomGameSetting(setting *anypb.Any) {
+	r.mCustomGameSetting = setting
 }
 
 func (r *Room) GetUsers() []d.User {
@@ -76,7 +83,6 @@ func (r *Room) SetProvider(provider d.Provider) {
 		r.mProvider.DelRoom(r)
 	}
 	r.mProvider = provider
-	r.mGameName = provider.GetGameName()
 	provider.AddRoom(r)
 }
 
@@ -97,7 +103,9 @@ func (r *Room) GetUserState(user d.User) (d.UserState, error) {
 }
 
 func (r *Room) UserJoin(user d.User) error {
-	// TODO: check room capacity
+	if r.mProvider != nil && isFullRoom(r.mProvider.GetGameSetting(), int32(len(r.GetUsers()))) {
+		return errors.New("Full Room")
+	}
 	if r.mState == d.RoomState_PLAYING {
 		_, ok := r.mUsers[user.GetUserName()]
 		if ok && r.mUserStates[user.GetUserName()] == d.UserState_EXITED {
@@ -114,7 +122,7 @@ func (r *Room) UserJoin(user d.User) error {
 func (r *Room) UserReady(user d.User, isReady bool) error {
 	_, ok := r.mUsers[user.GetUserName()]
 	if !ok {
-		return errors.New(fmt.Sprintf("No such user(%s) in room(%d)", user.GetUserName(), r.mRoomID))
+		return fmt.Errorf("No such user(%s) in room(%d)", user.GetUserName(), r.mRoomID)
 	}
 	if r.mState == d.RoomState_PLAYING {
 		return errors.New("Not support change user state when game is playing")
@@ -124,30 +132,35 @@ func (r *Room) UserReady(user d.User, isReady bool) error {
 	} else {
 		r.mUserStates[user.GetUserName()] = d.UserState_PREPARING
 	}
-	for _, v := range r.mUserStates {
-		if v != d.UserState_READY {
-			return nil
+
+	if r.mProvider != nil && isAcceptableUserNum(r.mProvider.GetGameSetting(), int32(len(r.mUsers))) {
+		for _, v := range r.mUserStates {
+			if v != d.UserState_READY {
+				return nil
+			}
 		}
+		for k := range r.mUserStates {
+			r.mUserStates[k] = d.UserState_PLAYING
+		}
+		r.mState = d.RoomState_PLAYING
 	}
-	for k := range r.mUserStates {
-		r.mUserStates[k] = d.UserState_PLAYING
-	}
-	r.mState = d.RoomState_PLAYING
+
 	return nil
 }
 
-func (r *Room) UserExit(user d.User) error {
+func (r *Room) UserExit(user d.User) (bool, error) {
 	_, ok := r.mUsers[user.GetUserName()]
 	if !ok {
-		return errors.New(fmt.Sprintf("No such user(%s) in room(%d)", user.GetUserName(), r.mRoomID))
+		return false, fmt.Errorf("No such user(%s) in room(%d)", user.GetUserName(), r.mRoomID)
 	}
 	if r.mState == d.RoomState_PLAYING {
 		r.mUserStates[user.GetUserName()] = d.UserState_EXITED
+		return false, nil
 	} else {
 		delete(r.mUsers, user.GetUserName())
 		delete(r.mUserStates, user.GetUserName())
 	}
-	return nil
+	return true, nil
 }
 
 func (r *Room) Restart() error {
@@ -155,9 +168,11 @@ func (r *Room) Restart() error {
 		if state == d.UserState_PLAYING {
 			r.mUserStates[un] = d.UserState_PREPARING
 		} else if state == d.UserState_EXITED {
+			r.mUsers[un].SetRoom(nil)
 			delete(r.mUsers, un)
 			delete(r.mUserStates, un)
 		}
 	}
+	r.mState = d.RoomState_PREPARING
 	return nil
 }

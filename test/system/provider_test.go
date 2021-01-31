@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
-	"github.com/smartystreets/assertions"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/SailGame/Core/data/memory"
@@ -31,7 +30,7 @@ func TestGameStart(t *testing.T) {
 			Points:   99,
 		})
 
-		So(err, assertions.ShouldBeNil)
+		So(err, ShouldBeNil)
 
 		controlRoomRet, err := uc.mCoreClient.ControlRoom(context.TODO(), &cpb.ControlRoomArgs{
 			Token:    token,
@@ -40,12 +39,12 @@ func TestGameStart(t *testing.T) {
 			Custom:   gameSetting,
 		})
 
-		So(err, assertions.ShouldBeNil)
-		So(controlRoomRet.Err, assertions.ShouldEqual, cpb.ErrorNumber_ControlRoom_RequiredProviderNotExist)
+		So(err, ShouldBeNil)
+		So(controlRoomRet.Err, ShouldEqual, cpb.ErrorNumber_ControlRoom_RequiredProviderNotExist)
 
 		pcId := "testProvider"
 		pc := f.newProviderClient()
-		So(pc.connectToCore(), assertions.ShouldBeNil)
+		So(pc.connectToCore(), ShouldBeNil)
 
 		err = pc.mProviderClient.Send(&cpb.ProviderMsg{
 			Msg: &cpb.ProviderMsg_RegisterArgs{
@@ -56,7 +55,7 @@ func TestGameStart(t *testing.T) {
 			},
 		})
 
-		So(err, assertions.ShouldBeNil)
+		So(err, ShouldBeNil)
 		time.Sleep(500 * time.Millisecond)
 
 		controlRoomRet, err = uc.mCoreClient.ControlRoom(context.TODO(), &cpb.ControlRoomArgs{
@@ -66,24 +65,24 @@ func TestGameStart(t *testing.T) {
 			Custom:   gameSetting,
 		})
 
-		So(err, assertions.ShouldBeNil)
-		So(controlRoomRet.Err, assertions.ShouldEqual, cpb.ErrorNumber_OK)
+		So(err, ShouldBeNil)
+		So(controlRoomRet.Err, ShouldEqual, cpb.ErrorNumber_OK)
 
 		qryRoomRet, err := uc.mCoreClient.QueryRoom(context.TODO(), &cpb.QueryRoomArgs{
 			Token:  token,
 			RoomId: roomId,
 		})
 
-		So(err, assertions.ShouldBeNil)
-		So(qryRoomRet.Err, assertions.ShouldEqual, cpb.ErrorNumber_OK)
-		So(qryRoomRet.Room.RoomId, assertions.ShouldEqual, roomId)
-		So(qryRoomRet.Room.GameName, assertions.ShouldEqual, gameName)
+		So(err, ShouldBeNil)
+		So(qryRoomRet.Err, ShouldEqual, cpb.ErrorNumber_OK)
+		So(qryRoomRet.Room.RoomId, ShouldEqual, roomId)
+		So(qryRoomRet.Room.GameName, ShouldEqual, gameName)
 
 		unMarshalGameSetting := &cpb.Account{}
 		err = ptypes.UnmarshalAny(qryRoomRet.GetRoom().GetGameSetting(), unMarshalGameSetting)
-		So(err, assertions.ShouldBeNil)
-		So(unMarshalGameSetting.UserName, assertions.ShouldEqual, "GameSetting")
-		So(unMarshalGameSetting.Points, assertions.ShouldEqual, 99)
+		So(err, ShouldBeNil)
+		So(unMarshalGameSetting.UserName, ShouldEqual, "GameSetting")
+		So(unMarshalGameSetting.Points, ShouldEqual, 99)
 
 		uc.mCoreClient.OperationInRoom(context.TODO(), &cpb.OperationInRoomArgs{
 			Token: token,
@@ -97,28 +96,31 @@ func TestGameStart(t *testing.T) {
 		wg.Add(2)
 		go Convey("uc recv", t, func() {
 			JoinMsg, err := uc.mLisClient.Recv()
-			So(err, assertions.ShouldBeNil)
-			So(JoinMsg.GetRoomDetails(), assertions.ShouldNotBeNil)
+			So(err, ShouldBeNil)
+			So(JoinMsg.GetRoomDetails(), ShouldNotBeNil)
 			ReadyMsg, err := uc.mLisClient.Recv()
-			So(err, assertions.ShouldBeNil)
-			So(ReadyMsg.GetRoomDetails(), assertions.ShouldNotBeNil)
+			So(err, ShouldBeNil)
+			So(ReadyMsg.GetRoomDetails(), ShouldNotBeNil)
 			msg, err := uc.mLisClient.Recv()
 
 			t.Logf("TestUser receive start game")
-			So(err, assertions.ShouldBeNil)
-			So(msg.GetCustom(), assertions.ShouldNotBeNil)
+			So(err, ShouldBeNil)
+			So(msg.GetCustom(), ShouldNotBeNil)
 			wg.Done()
 		})
 
 		go Convey("pc recv", t, func() {
-			msg, err := pc.mProviderClient.Recv()
+			regRetMsg, err := pc.mProviderClient.Recv()
+			So(err, ShouldBeNil)
+			So(regRetMsg.GetRegisterRet(), ShouldNotBeNil)
 
-			So(err, assertions.ShouldBeNil)
-			So(msg.GetStartGameArgs(), assertions.ShouldNotBeNil)
+			msg, err := pc.mProviderClient.Recv()
+			So(err, ShouldBeNil)
+			So(msg.GetStartGameArgs(), ShouldNotBeNil)
 			err = ptypes.UnmarshalAny(msg.GetStartGameArgs().GetCustom(), unMarshalGameSetting)
-			So(err, assertions.ShouldBeNil)
-			So(unMarshalGameSetting.UserName, assertions.ShouldEqual, "GameSetting")
-			So(unMarshalGameSetting.Points, assertions.ShouldEqual, 99)
+			So(err, ShouldBeNil)
+			So(unMarshalGameSetting.UserName, ShouldEqual, "GameSetting")
+			So(unMarshalGameSetting.Points, ShouldEqual, 99)
 
 			t.Logf("TestProvider send start to TestUser")
 			err = pc.mProviderClient.Send(&cpb.ProviderMsg{
@@ -130,7 +132,7 @@ func TestGameStart(t *testing.T) {
 					},
 				},
 			})
-			So(err, assertions.ShouldBeNil)
+			So(err, ShouldBeNil)
 			wg.Done()
 		})
 

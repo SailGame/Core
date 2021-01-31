@@ -12,7 +12,7 @@ import (
 type Handler interface {
 	HandleRegisterArgs(*Conn, *cpb.ProviderMsg, *cpb.RegisterArgs) error
 	HandleNotifyMsg(*Conn, *cpb.ProviderMsg, *cpb.NotifyMsgArgs) error
-
+	HandleCloseGameMsg(*Conn, *cpb.ProviderMsg, *cpb.CloseGameArgs) error
 	Disconnect(*Conn)
 }
 
@@ -51,11 +51,19 @@ func (conn *Conn) RecvLoop() {
 		log.Debugf("Provider connection (%s) recv msg (%s)", conn.PrintID, msg.String())
 
 		if submsg := msg.GetRegisterArgs(); submsg != nil {
-			conn.mHandler.HandleRegisterArgs(conn, msg, submsg)
+			err = conn.mHandler.HandleRegisterArgs(conn, msg, submsg)
 		} else if submsg := msg.GetNotifyMsgArgs(); submsg != nil {
-			conn.mHandler.HandleNotifyMsg(conn, msg, submsg)
+			err = conn.mHandler.HandleNotifyMsg(conn, msg, submsg)
+		} else if submsg := msg.GetCloseGameArgs(); submsg != nil {
+			err = conn.mHandler.HandleCloseGameMsg(conn, msg, submsg)
 		} else {
-			log.Warnf("Received unwanted msg (%s) from provider %s", msg.String(), conn.PrintID)
+			log.Warnf("Received unwanted msg (%s) from provider (%s)", msg.String(), conn.PrintID)
+			conn.mHandler.Disconnect(conn)
+			conn.mRunning.Store(false)
+			return
+		}
+		if err != nil {
+			log.Infof("Process msg(%s) from provider (%s) fail (%s)", msg.String(), conn.PrintID, err.Error())
 			conn.mHandler.Disconnect(conn)
 			conn.mRunning.Store(false)
 			return

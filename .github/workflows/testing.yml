@@ -31,10 +31,11 @@ jobs:
       run: |
         sudo apt install -y make protobuf-compiler
         go mod download
-        go get google.golang.org/protobuf/cmd/protoc-gen-go google.golang.org/grpc/cmd/protoc-gen-go-grpc
+        go get google.golang.org/protobuf/cmd/protoc-gen-go google.golang.org/grpc/cmd/protoc-gen-go-grpc github.com/golang/mock/mockgen@v1.4.4
         make proto
+        make generate
     - name: build
       run: |
         make
     - name: test
-      run: go test -cpu 1,4 -timeout 7m github.com/SailGame/Core/...
+      run: make test

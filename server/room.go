@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/SailGame/Core/conn/client"
@@ -34,7 +35,7 @@ func (coreServer *CoreServer) ControlRoom(ctx context.Context, req *cpb.ControlR
 		}
 		// TODO: provider selector
 		room.SetProvider(providers[0])
-		room.SetGameSetting(req.GetCustom())
+		room.SetCustomGameSetting(req.GetCustom())
 	}
 
 	coreServer.NotifyRoomDetails(ctx, room)
@@ -60,6 +61,16 @@ func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArg
 	user := token.GetUser()
 	user.Lock()
 	defer user.Unlock()
+
+	curRoom, err := user.GetRoom()
+	if curRoom != nil {
+		if curRoom.GetRoomID() == req.RoomId {
+			return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_OK}, nil
+		} else {
+			return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_JoinRoom_UserIsInAnotherRoom}, nil
+		}
+	}
+
 	room, err := coreServer.mStorage.FindRoom(req.RoomId)
 	if err != nil {
 		return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_JoinRoom_InvalidRoomID}, nil
@@ -67,14 +78,6 @@ func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArg
 	room.Lock()
 	defer room.Unlock()
 
-	log.Debugf("Join Room userName(%s) roomID(%d)", user.GetUserName(), req.GetRoomId())
-
-	curRoom, err := user.GetRoom()
-	if curRoom == room {
-		return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_OK}, nil
-	} else if curRoom != nil {
-		return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_JoinRoom_UserIsInAnotherRoom}, nil
-	}
 	err = room.UserJoin(user)
 	if err != nil {
 		return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_JoinRoom_FullRoom}, nil
@@ -83,6 +86,8 @@ func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArg
 	if err != nil {
 		return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_UnkownError}, nil
 	}
+	log.Debugf("Join Room userName(%s) roomID(%d)", user.GetUserName(), req.GetRoomId())
+
 	coreServer.NotifyRoomDetails(ctx, room)
 
 	return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_OK}, nil
@@ -104,9 +109,12 @@ func (coreServer *CoreServer) ExitRoom(ctx context.Context, req *cpb.ExitRoomArg
 	}
 	room.Lock()
 	defer room.Unlock()
-	err = room.UserExit(user)
+	ok, err := room.UserExit(user)
 	if err != nil {
 		return &cpb.ExitRoomRet{Err: cpb.ErrorNumber_UnkownError}, nil
+	}
+	if !ok {
+		return &cpb.ExitRoomRet{Err: cpb.ErrorNumber_ExitRoom_IsPlaying}, nil
 	}
 	err = user.SetRoom(nil)
 	if err != nil {
@@ -166,10 +174,10 @@ func (coreServer *CoreServer) OperationInRoom(ctx context.Context, req *cpb.Oper
 		if room.GetState() == d.RoomState_PLAYING {
 			pConn.Send(&cpb.ProviderMsg{
 				Msg: &cpb.ProviderMsg_StartGameArgs{
-					&cpb.StartGameArgs{
+					StartGameArgs: &cpb.StartGameArgs{
 						RoomId: room.GetRoomID(),
 						UserId: toUserTempID(room.GetUsers()),
-						Custom: room.GetGameSetting(),
+						Custom: room.GetCustomGameSetting(),
 					},
 				},
 			})
@@ -177,7 +185,7 @@ func (coreServer *CoreServer) OperationInRoom(ctx context.Context, req *cpb.Oper
 	} else if custom := req.GetCustom(); custom != nil {
 		pConn.Send(&cpb.ProviderMsg{
 			Msg: &cpb.ProviderMsg_UserOperationArgs{
-				&cpb.UserOperationArgs{
+				UserOperationArgs: &cpb.UserOperationArgs{
 					RoomId: room.GetRoomID(),
 					UserId: token.GetUser().GetTemporaryID(),
 					Custom: custom,

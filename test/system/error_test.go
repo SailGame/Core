@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/smartystreets/assertions"
 	. "github.com/smartystreets/goconvey/convey"
 
 	"github.com/SailGame/Core/data/memory"
@@ -27,12 +26,12 @@ func TestClientDisconnect(t *testing.T) {
 			Token:  token,
 			RoomId: roomId,
 		})
-		So(err, assertions.ShouldBeNil)
-		So(controlRoomRet.Err, assertions.ShouldEqual, cpb.ErrorNumber_OK)
+		So(err, ShouldBeNil)
+		So(controlRoomRet.Err, ShouldEqual, cpb.ErrorNumber_OK)
 
 		pcId := "testProvider"
 		pc := f.newProviderClient()
-		So(pc.connectToCore(), assertions.ShouldBeNil)
+		So(pc.connectToCore(), ShouldBeNil)
 
 		err = pc.mProviderClient.Send(&cpb.ProviderMsg{
 			Msg: &cpb.ProviderMsg_RegisterArgs{
@@ -43,11 +42,11 @@ func TestClientDisconnect(t *testing.T) {
 			},
 		})
 
-		So(err, assertions.ShouldBeNil)
+		So(err, ShouldBeNil)
 
 		uc.mClose()
 		_, err = uc.mLisClient.Recv()
-		So(err, assertions.ShouldNotBeNil)
+		So(err, ShouldNotBeNil)
 
 		// all user is ready, user and provider should receive the start signal
 		// but user disconnects from core, core should discard the msg to that user
@@ -61,9 +60,9 @@ func TestClientDisconnect(t *testing.T) {
 				},
 			},
 		})
-		So(err, assertions.ShouldBeNil)
+		So(err, ShouldBeNil)
 
 		_, err = uc.mLisClient.Recv()
-		So(err, assertions.ShouldNotBeNil)
+		So(err, ShouldNotBeNil)
 	})
 }
