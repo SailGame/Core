@@ -30,7 +30,7 @@ func TestCompleteLifecycle(t *testing.T) {
 				CloseGameArgs: &cpb.CloseGameArgs{
 					RoomId: roomID,
 				},
-			},})
+			}})
 
 		p.mMockProviderServer.EXPECT().Send(gomock.Any()).Times(1)
 		for _, u := range users {

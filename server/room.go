@@ -66,7 +66,7 @@ func (coreServer *CoreServer) JoinRoom(ctx context.Context, req *cpb.JoinRoomArg
 	if curRoom != nil {
 		if curRoom.GetRoomID() == req.RoomId {
 			return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_OK}, nil
-		}else {
+		} else {
 			return &cpb.JoinRoomRet{Err: cpb.ErrorNumber_JoinRoom_UserIsInAnotherRoom}, nil
 		}
 	}

@@ -113,7 +113,6 @@ func (coreServer *CoreServer) HandleCloseGameMsg(conn *provider.Conn, providerMs
 	return nil
 }
 
-
 func (coreServer *CoreServer) Disconnect(conn *provider.Conn) {
 	if conn.ID != nil {
 		p := conn.ID.(d.Provider)

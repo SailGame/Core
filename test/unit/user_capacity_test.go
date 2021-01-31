@@ -37,13 +37,11 @@ func TestMaxUser(t *testing.T) {
 				},
 			},
 		})
-		u1.mMockUserServer.EXPECT().Send(gomock.Any()).Times(1)
+		u1.mMockUserServer.EXPECT().Send(gomock.Any()).AnyTimes()
+		u2.mMockUserServer.EXPECT().Send(gomock.Any()).Times(0)
 		So(f.joinRoom(room, u1), ShouldEqual, cpb.ErrorNumber_OK)
-		u1.mMockUserServer.EXPECT().Send(gomock.Any()).Times(1)
 		So(f.controlRoom(u1, testGame), ShouldEqual, cpb.ErrorNumber_OK)
 
-		u1.mMockUserServer.EXPECT().Send(gomock.Any()).Times(0)
-		u2.mMockUserServer.EXPECT().Send(gomock.Any()).Times(0)
 		So(f.joinRoom(room, u2), ShouldEqual, cpb.ErrorNumber_JoinRoom_FullRoom)
 	})
 }
@@ -74,19 +72,14 @@ func TestMinUser(t *testing.T) {
 		})
 
 		p.mMockProviderServer.EXPECT().Send(gomock.Any()).Times(0)
-		u1.mMockUserServer.EXPECT().Send(gomock.Any()).Times(1)
+		u1.mMockUserServer.EXPECT().Send(gomock.Any()).AnyTimes()
+		u2.mMockUserServer.EXPECT().Send(gomock.Any()).AnyTimes()
 		So(f.joinRoom(room, u1), ShouldEqual, cpb.ErrorNumber_OK)
-		u1.mMockUserServer.EXPECT().Send(gomock.Any()).Times(1)
 		So(f.controlRoom(u1, testGame), ShouldEqual, cpb.ErrorNumber_OK)
-		u1.mMockUserServer.EXPECT().Send(gomock.Any()).Times(1)
 		So(f.userReady(u1), ShouldEqual, cpb.ErrorNumber_OK)
 
-		u1.mMockUserServer.EXPECT().Send(gomock.Any()).Times(1)
-		u2.mMockUserServer.EXPECT().Send(gomock.Any()).Times(1)
 		So(f.joinRoom(room, u2), ShouldEqual, cpb.ErrorNumber_OK)
 		p.mMockProviderServer.EXPECT().Send(gomock.Any()).Times(1)
-		u1.mMockUserServer.EXPECT().Send(gomock.Any()).Times(1)
-		u2.mMockUserServer.EXPECT().Send(gomock.Any()).Times(1)
 		So(f.userReady(u2), ShouldEqual, cpb.ErrorNumber_OK)
 	})
 }

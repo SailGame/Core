@@ -2,10 +2,11 @@ package unit
 
 import (
 	"context"
-	"log"
+	"os"
 	"strconv"
 	"testing"
-	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/SailGame/Core/data/memory"
 	cpb "github.com/SailGame/Core/pb/core"
@@ -14,17 +15,25 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
+func init() {
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
+}
+
 type fixture struct {
-	ctrl        *gomock.Controller
-	coreServer  *server.CoreServer
-	userNum     int
-	providerNum int
+	ctrl               *gomock.Controller
+	coreServer         *server.CoreServer
+	createdUserNum     int
+	createdProviderNum int
 }
 
 type provider struct {
 	mId                 string
 	mMockProviderServer *mocks.MockGameCore_ProviderServer
+	mMsgID              int
 	mSendMsgCh          chan *cpb.ProviderMsg
+	mSendMsgDone        chan int
 }
 
 type user struct {
@@ -42,7 +51,6 @@ func newFixture(t *testing.T) *fixture {
 	f := &fixture{
 		ctrl:       gomock.NewController(t),
 		coreServer: coreServer,
-		userNum:    0,
 	}
 	return f
 }
@@ -53,13 +61,20 @@ func (f *fixture) done() {
 
 func (f *fixture) newMockProvider() *provider {
 	p := &provider{
-		mId:                 strconv.Itoa(f.providerNum),
+		mId:                 strconv.Itoa(f.createdProviderNum),
 		mMockProviderServer: mocks.NewMockGameCore_ProviderServer(f.ctrl),
+		mMsgID:              0,
 		mSendMsgCh:          make(chan *cpb.ProviderMsg),
+		mSendMsgDone:        make(chan int),
 	}
-	f.providerNum = f.providerNum + 1
+	f.createdProviderNum = f.createdProviderNum + 1
 
 	p.mMockProviderServer.EXPECT().Recv().AnyTimes().DoAndReturn(func() (*cpb.ProviderMsg, error) {
+		// core finish last msg so it recv again
+		if p.mMsgID > 0 {
+			p.mSendMsgDone <- p.mMsgID
+		}
+		p.mMsgID = p.mMsgID + 1
 		msg := <-p.mSendMsgCh
 		return msg, nil
 	})
@@ -70,12 +85,12 @@ func (f *fixture) newMockProvider() *provider {
 func (f *fixture) newMockUser() *user {
 	u := &user{
 		mMockUserServer: mocks.NewMockGameCore_ListenServer(f.ctrl),
-		mUserName:       strconv.Itoa(f.userNum),
+		mUserName:       strconv.Itoa(f.createdUserNum),
 		mToken:          "",
 		mRoomId:         0,
 		mState:          false,
 	}
-	f.userNum = f.userNum + 1
+	f.createdUserNum = f.createdUserNum + 1
 
 	loginRet, err := f.coreServer.Login(context.TODO(), &cpb.LoginArgs{
 		UserName: u.mUserName,
@@ -142,7 +157,7 @@ func (f *fixture) userReady(u *user) cpb.ErrorNumber {
 
 func (f *fixture) newUsersAndRoom(userNum int) (users []*user, roomID int32, p *provider) {
 	if userNum < 0 {
-		log.Fatalf("newUsersAndRoom: userNum < 0")
+		log.Fatalf("newUsersAndRoom: createdUserNum < 0")
 	}
 	testGame := "testGame"
 	p = f.newMockProvider()
@@ -183,5 +198,5 @@ func (f *fixture) newUsersAndRoom(userNum int) (users []*user, roomID int32, p *
 
 func (p *provider) send(msg *cpb.ProviderMsg) {
 	p.mSendMsgCh <- msg
-	time.Sleep(10 * time.Millisecond)
+	<-p.mSendMsgDone
 }

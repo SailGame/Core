@@ -13,6 +13,12 @@ import (
 	"github.com/SailGame/Core/server"
 )
 
+func init() {
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.DebugLevel)
+}
+
 type systemFixture struct {
 	mCoreServer *server.CoreServer
 	mLis        *bufconn.Listener
@@ -46,9 +52,6 @@ func (pc *providerClient) connectToCore() (err error) {
 }
 
 func newFixture() *systemFixture {
-	log.SetFormatter(&log.JSONFormatter{})
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
 	const bufSize = 1024 * 1024
 	return &systemFixture{
 		mCtx: context.Background(),
