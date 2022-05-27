@@ -1,9 +1,7 @@
-FROM golang:1.13 
+FROM golang:1.18
 
 WORKDIR /go/src/app
 
-COPY . .
+COPY build/core .
 
-RUN make core
-
-CMD ["/go/src/app/build/core"]
+CMD ["/go/src/app/core"]

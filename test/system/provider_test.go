@@ -145,7 +145,7 @@ func TestGameStart(t *testing.T) {
 		select {
 		case <-ch:
 			return
-		case <-time.After(1 * time.Second):
+		case <-time.After(5 * time.Second):
 			t.Fatalf("timeout")
 		}
 	})
