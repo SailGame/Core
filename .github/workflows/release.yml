@@ -34,13 +34,6 @@ jobs:
       - name: Download dependencies
         run: |
           sudo apt install -y make protobuf-compiler
-          go mod download
-          go get google.golang.org/grpc/cmd/protoc-gen-go-grpc
-          go install google.golang.org/protobuf/cmd/protoc-gen-go google.golang.org/grpc/cmd/protoc-gen-go-grpc
-          go install github.com/golang/mock/mockgen@v1.4.4
-          export PATH="$PATH:$(go env GOPATH)/bin"
-          make proto
-          make generate
       - name: Build
         env:
           GOOS: ${{ matrix.goos }}

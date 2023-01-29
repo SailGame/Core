@@ -30,7 +30,7 @@ func getMinUsers(regArgs *cpb.RegisterArgs) int32 {
 func (coreServer *CoreServer) Provider(pServer cpb.GameCore_ProviderServer) error {
 	log.Info("Provider connected")
 	conn := provider.NewConn(pServer, coreServer)
-	conn.Start()
+	conn.Poll()
 	return nil
 }
 
@@ -41,10 +41,9 @@ func (coreServer *CoreServer) HandleRegisterArgs(conn *provider.Conn, providerMs
 		MinUser:  getMinUsers(regArgs),
 	})
 	if err := coreServer.mStorage.RegisterProvider(p); err != nil {
-		log.Warnf("Provider register failed: (%s) (%s) (%s)", regArgs.GetId(), regArgs.GetGameName(), err.Error())
-		return nil
+		return fmt.Errorf("Provider register failed: (%s) (%s) (%s)", regArgs.GetId(), regArgs.GetGameName(), err.Error())
 	}
-	log.Infof("Provider register: (%s) (%s)", regArgs.GetId(), regArgs.GetGameName())
+	log.Infof("Provider register successfully: (%s) (%s)", regArgs.GetId(), regArgs.GetGameName())
 	conn.ID = p
 	conn.PrintID = regArgs.GetId() + ":" + regArgs.GetGameName()
 
@@ -100,6 +99,10 @@ func (coreServer *CoreServer) HandleNotifyMsg(conn *provider.Conn, providerMsg *
 }
 
 func (coreServer *CoreServer) HandleCloseGameMsg(conn *provider.Conn, providerMsg *cpb.ProviderMsg, closeGameArgs *cpb.CloseGameArgs) error {
+	if conn.ID == nil {
+		// not registered, ignore and disconnect
+		return errors.New("Provider hasn't registered but sent other msgs")
+	}
 	roomID := closeGameArgs.GetRoomId()
 	room, err := coreServer.mStorage.FindRoom(roomID)
 	if err != nil {
