@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"sync"
+	"fmt"
 	"sync/atomic"
 
 	log "github.com/sirupsen/logrus"
@@ -22,18 +22,15 @@ type Conn struct {
 	// used in logging
 	PrintID string
 
-	mRecvLoopWg sync.WaitGroup
 	mRunning    atomic.Value
 	mServer     cpb.GameCore_ProviderServer
 	mHandler    Handler
-	mMutex      sync.Locker
 }
 
 func NewConn(pServer cpb.GameCore_ProviderServer, handler Handler) *Conn {
 	conn := &Conn{
 		mServer:  pServer,
 		mHandler: handler,
-		mMutex:   &sync.Mutex{},
 	}
 	conn.mRunning.Store(false)
 	return conn
@@ -45,8 +42,7 @@ func (conn *Conn) RecvLoop() {
 		if err != nil {
 			log.Warnf("Provider (%s) disconnected (%s)", conn.PrintID, err.Error())
 			conn.mHandler.Disconnect(conn)
-			conn.mRunning.Store(false)
-			return
+			break
 		}
 		log.Debugf("Provider connection (%s) recv msg (%s)", conn.PrintID, msg.String())
 
@@ -59,45 +55,26 @@ func (conn *Conn) RecvLoop() {
 		} else {
 			log.Warnf("Received unwanted msg (%s) from provider (%s)", msg.String(), conn.PrintID)
 			conn.mHandler.Disconnect(conn)
-			conn.mRunning.Store(false)
-			return
+			break
 		}
 		if err != nil {
-			log.Infof("Process msg(%s) from provider (%s) fail (%s)", msg.String(), conn.PrintID, err.Error())
+			log.Infof("Process msg(%s) from provider (%s) failed. Err(%s)", msg.String(), conn.PrintID, err.Error())
 			conn.mHandler.Disconnect(conn)
-			conn.mRunning.Store(false)
-			return
+			break
 		}
 	}
-
 }
 
-func (conn *Conn) Start() {
-	if conn.mRunning.Load().(bool) {
-		return
+func (conn *Conn) Poll() error {
+	if conn.mRunning.CompareAndSwap(false, true) {
+		log.Debugf("Provider connection started")
+		conn.RecvLoop()
+		return nil
 	}
-	log.Debugf("Provider connection started")
-	conn.mRunning.Store(true)
-	conn.mRecvLoopWg.Add(1)
-	go conn.RecvLoop()
-	conn.mRecvLoopWg.Wait()
-}
-
-func (conn *Conn) Close() {
-	if !conn.mRunning.Load().(bool) {
-		return
-	}
-	log.Debugf("Provider connection (%s) received stop signal ", conn.PrintID)
-	conn.mRecvLoopWg.Done()
+	return fmt.Errorf("Provider connection (%s) is running already", conn.PrintID)
 }
 
 func (conn *Conn) Send(msg *cpb.ProviderMsg) error {
 	log.Debugf("Provider connection (%s) send msg (%s)", conn.PrintID, msg.String())
-	conn.mMutex.Lock()
-	err := conn.mServer.Send(msg)
-	conn.mMutex.Unlock()
-	if err != nil {
-		log.Debug(err)
-	}
-	return err
+	return conn.mServer.Send(msg)
 }
